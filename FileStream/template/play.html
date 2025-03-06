@@ -1,412 +1,303 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>FileStreamBot | {{file_name}}</title>
+
     <link rel="icon" href="https://i.ibb.co/Hh4kF2b/icon.png" type="image/x-icon">
+
     <link rel="shortcut icon" href="https://i.ibb.co/Hh4kF2b/icon.png" type="image/x-icon">
+
     <link rel="stylesheet" href="https://unpkg.com/sheryjs/dist/Shery.css" />
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/proavipatil/data@main/fs/src/style.css">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/proavipatil/data@main/fs/src/plyr.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
+
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@500;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root {
-            --bg-color: #ffffff;
-            --text-color: #212121;
-            --secondary-bg: #f3f3f3;
-            --accent-color: #2563eb;
-            --navbar-color: rgba(255, 255, 255, 0.8);
-            --card-bg: #ffffff;
-            --card-shadow: rgba(0, 0, 0, 0.1);
-            --transition-speed: 0.3s;
-        }
 
-        [data-theme="dark"] {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --secondary-bg: #1e1e1e;
-            --accent-color: #4f91ff;
-            --navbar-color: rgba(18, 18, 18, 0.8);
-            --card-bg: #1e1e1e;
-            --card-shadow: rgba(0, 0, 0, 0.3);
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: all var(--transition-speed) ease;
-        }
-
-        nav {
-            background-color: var(--navbar-color);
-            transition: background-color var(--transition-speed) ease;
-        }
-
-        .abt-sec {
-            background-color: var(--secondary-bg);
-            transition: background-color var(--transition-speed) ease;
-        }
-
-        .downloadBtn button, .links button {
-            background-color: var(--card-bg);
-            color: var(--text-color);
-            box-shadow: 0 4px 6px var(--card-shadow);
-            transition: all var(--transition-speed) ease;
-        }
-
-        .file-name {
-            background-color: var(--card-bg);
-            color: var(--text-color);
-            transition: all var(--transition-speed) ease;
-        }
-
-        /* Dark mode switch styling */
-        .theme-switch-wrapper {
-            display: flex;
-            align-items: center;
-            z-index: 100;
-            margin-left: 20px;
-        }
-
-        .theme-switch {
-            position: relative;
-            width: 60px;
-            height: 30px;
-            cursor: pointer;
-            perspective: 800px;
-        }
-
-        .switch-scene {
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            position: relative;
-        }
-
-        [data-theme="dark"] .switch-scene {
-            transform: rotateY(180deg);
-        }
-
-        .switch-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 15px;
-            backface-visibility: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .switch-face-light {
-            background: linear-gradient(145deg, #5ab0ff, #87cefa);
-        }
-
-        .switch-face-dark {
-            background: linear-gradient(145deg, #2c3e50, #1a1a2e);
-            transform: rotateY(180deg);
-        }
-
-        .switch-icon {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            position: relative;
-            z-index: 2;
-        }
-
-        .sun {
-            background-color: #ffdb58;
-            box-shadow: 0 0 10px #ffdb58, 0 0 20px rgba(255, 219, 88, 0.5);
-            animation: pulse 2s infinite alternate;
-        }
-
-        .moon {
-            background-color: #c2c2c2;
-            box-shadow: inset -3px 1px 0px 2px #808080;
-        }
-
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 10px #ffdb58, 0 0 20px rgba(255, 219, 88, 0.5);
-            }
-            100% {
-                box-shadow: 0 0 15px #ffdb58, 0 0 30px rgba(255, 219, 88, 0.8);
-            }
-        }
-
-        .stars {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background-color: white;
-            border-radius: 50%;
-            box-shadow: 0 0 2px white;
-        }
-
-        .star1 { left: 12px; top: 5px; }
-        .star2 { left: 30px; top: 8px; }
-        .star3 { left: 45px; top: 5px; }
-        .star4 { left: 15px; top: 20px; }
-        .star5 { left: 35px; top: 18px; }
-    </style>
 </head>
+
 <body>
+
     <nav>
+
         <div class="nleft">
+
             <a href="#">
+
                 <h3 id="heading" style="z-index: 100;" class="magnet title">FILE STREAM</h3>
+
             </a>
+
         </div>
+
         <div class="nryt">
-            <div class="theme-switch-wrapper">
-                <div class="theme-switch" id="themeSwitch">
-                    <div class="switch-scene">
-                        <div class="switch-face switch-face-light">
-                            <div class="switch-icon sun"></div>
-                            <div class="cloud" style="width: 18px; height: 10px; background: white; border-radius: 10px;"></div>
-                        </div>
-                        <div class="switch-face switch-face-dark">
-                            <div class="switch-icon moon"></div>
-                            <div class="stars star1"></div>
-                            <div class="stars star2"></div>
-                            <div class="stars star3"></div>
-                            <div class="stars star4"></div>
-                            <div class="stars star5"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
             <a class="home-btn magnet" href="#main" onclick="toggleWidthnav(this)">HOME</a>
+
         </div>
+
     </nav>
 
     <center>
+
         <div class="about-nav">
+
             <a href="#abtus" class="wlcm magnet" onclick="toggleWidth(this)">WELCOME</a>
+
             <a href="#channels" class="abt-chnl magnet" onclick="toggleWidth(this)">CHANNELS</a>
+
             <a href="#contact" class="magnet contact-btn" onclick="toggleWidth(this)">CONTACT</a>
+
         </div>
+
     </center>
 
     <div class="outer">
+
         <div class="inner">
+
             <div class="main" id="main">
+
                 <video id="player" class="player" src="{{file_url}}" type="video/mp4" playsinline controls
+
                     width="100%"></video>
+
                 <div class="player"></div>
+
                 <div class="file-name">
+
                     <h4 style="display: inline;">File Name: </h4>
+
                     <p style="display: inline;" id="myDiv">{{file_name}}</p><br>
+
                     <h4 style="display: inline;">File Size: </h4>
+
                     <p style="display: inline;">{{file_size}}</p>
+
                 </div>
+
                 <div class="downloadBtn">
+
                     <button class="magnet" onclick="streamDownload()">
+
                         <img style="height: 30px;" src="https://i.ibb.co/RjzYttX/dl.png" alt="">download video
+
                     </button>
+
                     <button class="magnet" onclick="copyStreamLink()">
+
                         <img src="https://i.ibb.co/CM4Y586/link.png" alt="Copy Link">copy link
+
                     </button>
+
                     <button class="magnet" onclick="vlc_player()">
+
                         <img src="https://i.ibb.co/px6fQs1/vlc.png" alt="">watch in VLC PLAYER
+
                     </button>
+
                     <button class="magnet" onclick="mx_player()">
+
                         <img src="https://i.ibb.co/41WvtQ3/mx.png" alt="">watch in MX PLAYER
+
                     </button>
+
                     <button class="magnet" onclick="n_player()">
+
                         <img src="https://i.ibb.co/Hd2dS4t/nPlayer.png" alt="">watch in nPlayer
+
                     </button>
+
                 </div>
+
             </div>
+
             <div class="abt">
+
                 <div class="about">
+
                     <div class="about-dets">
+
                         <div class="abt-sec" id="abtus" style="padding: 160px 30px;">
+
                             <h1 style="text-align: center;">WELCOME TO OUR <Span>FILE STREAM</Span> BOT</h1>
+
                             <p style="text-align: center; line-height: 2;word-spacing: 2px;  letter-spacing: 0.8px;">
+
                                 This is a Telegram Bot to Stream <span>Movies</span> and <span>Series</span> directly on
+
                                 Telegram. You can also
+
                                 <span>download</span> them if you want. This bot is developed by <a
+
                                     href="https://github.com/AviPatilPro"><span style="font-weight: 700;">Avi</span></a>
+
                                 <br><br>If you like this bot, then don't
+
                                 forget to share it with your friends and family.
+
                             </p>
+
                         </div>
+
                         <div class="abt-sec" id="channels">
+
                             <h1>JOIN OUR <span>TELEGRAM</span> CHANNELS</h1>
+
                             <div class="links chnl-link">
+
                                 <a class="magnet" href="https://t.me/CheapieDeals">
+
                                     <button>CHEAP DEALS</button>
+
                                 </a>
+
                                 <a class="magnet" href="https://t.me/FilmyPixel">
+
                                     <button>FILMYPIXEL</button>
+
                                 </a>
+
                                 <a class="magnet" href="https://t.me/PostersZone">
+
                                     <button>POSTERS ZONE</button>
+
                                 </a>
+
                                 <a class="magnet" href="https://t.me/EpitomeQuality">
+
                                     <button>EPITOME QUALITY</button>
+
                                 </a>
+
                             </div>
+
                         </div>
+
                         <div class="abt-sec" id="contact">
+
                             <p style="text-align: center;">Report Bugs and Contact us on Telegram Below</p>
+
                             <div class="links contact">
+
                                 <a href="https://t.me/AvishkarPatil">
+
                                     <button>CONTACT</button>
+
                                 </a>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
         <footer>
+
             <center>
+
                 <div class="movie-cont">
+
                     <div class="movieSug">
+
                         <div class="movieDets">
+
                         </div>
+
                         <div class="movieimg">
+
                             <img src="">
+
                         </div>
+
                     </div>
+
                     <div class="low-width-movie-dets">
+
                         <div class="movieStsBar">
+
                             <div class="movieDets-mini">
+
                             </div>
+
                         </div>
+
                     </div>
+
                     <button class="ranMovBtn" onclick="getDets()">Get More Movies Suggestion</button>
+
                 </div>
+
             </center>
+
             <center>
+
                 <div class="copyright">
+
                     <h5 class="text-center">Copyright © 2024 <a href="https"><span
+
                                 style="font-weight: 700;">Rolex</span></a>. All
+
                         Rights Reserved.</h5>
+
                 </div>
+
             </center>
+
         </footer>
+
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.155.0/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/automat/controlkit.js@master/bin/controlKit.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sheryjs/dist/Shery.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const uncopyableElement = document.querySelector(".uncopyable");
-            if (uncopyableElement) {
-                uncopyableElement.addEventListener("selectstart", function (event) {
-                    event.preventDefault();
-                });
-            }
-
-            // Theme switcher functionality
-            const themeSwitch = document.getElementById('themeSwitch');
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-            
-            // Check for saved theme preference or use the system preference
-            const currentTheme = localStorage.getItem('theme') || 
-                                (prefersDarkScheme.matches ? 'dark' : 'light');
-            
-            // Apply the theme
-            if (currentTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                gsap.to('.switch-scene', { rotateY: 180, duration: 0 });
-            } else {
-                document.documentElement.setAttribute('data-theme', 'light');
-                gsap.to('.switch-scene', { rotateY: 0, duration: 0 });
-            }
-            
-            // Handle theme toggle with animation
-            themeSwitch.addEventListener('click', function() {
-                let theme = 'light';
-                
-                if (document.documentElement.getAttribute('data-theme') === 'light') {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    theme = 'dark';
-                    
-                    // Animate to dark
-                    gsap.to('.switch-scene', { 
-                        rotateY: 180, 
-                        duration: 0.6,
-                        ease: "back.out(1.7)"
-                    });
-                    
-                    // Additional animations for smooth transition
-                    gsap.to('body', { 
-                        backgroundColor: '#121212', 
-                        color: '#e0e0e0', 
-                        duration: 0.3 
-                    });
-                } else {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    theme = 'light';
-                    
-                    // Animate to light
-                    gsap.to('.switch-scene', { 
-                        rotateY: 0, 
-                        duration: 0.6,
-                        ease: "back.out(1.7)" 
-                    });
-                    
-                    // Additional animations for smooth transition
-                    gsap.to('body', { 
-                        backgroundColor: '#ffffff', 
-                        color: '#212121', 
-                        duration: 0.3
-                    });
-                }
-                
-                // Save preference to localStorage
-                localStorage.setItem('theme', theme);
-            });
-            
-            // Create 3D hover effect for the switch
-            themeSwitch.addEventListener('mousemove', function(e) {
-                const switchRect = this.getBoundingClientRect();
-                const x = e.clientX - switchRect.left;
-                const y = e.clientY - switchRect.top;
-                
-                // Calculate rotation values based on mouse position
-                const xRotation = ((y - switchRect.height / 2) / switchRect.height) * 10;
-                const yRotation = ((x - switchRect.width / 2) / switchRect.width) * 10;
-                
-                // Apply 3D rotation effect
-                gsap.to('.switch-scene', {
-                    rotationX: -xRotation,
-                    rotationY: yRotation,
-                    transformPerspective: 800,
-                    transformOrigin: 'center',
-                    duration: 0.3,
-                    ease: "power2.out"
-                });
-            });
-            
-            // Reset 3D effect when mouse leaves
-            themeSwitch.addEventListener('mouseleave', function() {
-                gsap.to('.switch-scene', {
-                    rotationX: 0,
-                    rotationY: document.documentElement.getAttribute('data-theme') === 'dark' ? 180 : 0,
-                    duration: 0.5,
-                    ease: "elastic.out(1.2, 0.5)"
-                });
-            });
-        });
-    </script>
-
-    <script src="https://cdn.plyr.io/3.6.9/plyr.js"></script>
-    <script src="https://proavipatil.github.io/data/fs/src/script.js"></script>
 </body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.155.0/three.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/gh/automat/controlkit.js@master/bin/controlKit.min.js"></script>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sheryjs/dist/Shery.js"></script>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const uncopyableElement = document.querySelector(".uncopyable");
+
+        uncopyableElement.addEventListener("selectstart", function (event) {
+
+            event.preventDefault();
+
+        });
+
+    });
+
+</script>
+
+<script src="https://cdn.plyr.io/3.6.9/plyr.js"></script>
+
+<script src="https://proavipatil.github.io/data/fs/src/script.js"></script>
+
 </html>
