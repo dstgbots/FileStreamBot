@@ -26,8 +26,6 @@ class Telegram:
     SECONDARY = True if MODE.lower() == "secondary" else False
     AUTH_USERS = list(set(int(x) for x in str(env.get("AUTH_USERS", "")).split()))
 
-import socket
-
 class Server:
     PORT = int(env.get("PORT", 8080))
     BIND_ADDRESS = str(env.get("BIND_ADDRESS", "0.0.0.0"))
@@ -35,16 +33,8 @@ class Server:
     HAS_SSL = str(env.get("HAS_SSL", "0").lower()) in ("1", "true", "t", "yes", "y")
     NO_PORT = str(env.get("NO_PORT", "0").lower()) in ("1", "true", "t", "yes", "y")
     FQDN = str(env.get("FQDN", BIND_ADDRESS))
-
-    # Resolve FQDN to an IPv4 address to avoid IPv6 issues
-    try:
-        RESOLVED_FQDN = socket.gethostbyname(FQDN)
-    except socket.gaierror:
-        RESOLVED_FQDN = BIND_ADDRESS
-
     URL = "http{}://{}{}/".format(
-    "s" if HAS_SSL else "", RESOLVED_FQDN, "" if NO_PORT else ":" + str(PORT)
+        "s" if HAS_SSL else "", FQDN, "" if NO_PORT else ":" + str(PORT)
     )
-
 
 
