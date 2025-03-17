@@ -43,7 +43,7 @@ class Server:
         RESOLVED_FQDN = BIND_ADDRESS
 
     URL = "http{}://{}{}/".format(
-        "s" if HAS_SSL else "", RESOLVED_FQDN, "" if NO_PORT else ":" + str(PORT)
+    "s" if HAS_SSL else "", RESOLVED_FQDN, "" if NO_PORT else ":" + str(PORT)
     )
 
 
