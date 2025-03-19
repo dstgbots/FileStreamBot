@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plyr HLS Player Fullscreen</title>
+  <title>File Streamer</title>
   <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
   <style>
     html, body {
@@ -29,7 +29,7 @@
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
   const video = document.getElementById('player');
-  const videoSrc = {{file_url}}; // Replace with your HLS .m3u8 URL
+  const videoSrc = '{{file_url}}'; // Replace with your HLS .m3u8 URL
 
   if (Hls.isSupported()) {
     const hls = new Hls();
