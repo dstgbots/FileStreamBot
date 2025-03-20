@@ -26,28 +26,21 @@
 <video id="player" controls></video>
 
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
   const video = document.getElementById('player');
-  const videoSrc = '{{file_url}}'; // Replace with your HLS .m3u8 URL
+  const videoSrc = '{{file_url}}'; // Replace with your direct video file URL (like MP4)
 
-  if (Hls.isSupported()) {
-    const hls = new Hls();
-    hls.loadSource(videoSrc);
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-      new Plyr(video, { controls: ['play', 'progress', 'mute', 'volume', 'fullscreen'] });
-      video.play();
-    });
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = videoSrc;
-    new Plyr(video, { controls: ['play', 'progress', 'mute', 'volume', 'fullscreen'] });
-    video.addEventListener('loadedmetadata', function () {
-      video.play();
-    });
-  } else {
-    alert('Your browser does not support HLS streaming.');
-  }
+  // Set the source directly
+  video.src = videoSrc;
+
+  // Initialize Plyr
+  const player = new Plyr(video, {
+    controls: ['play', 'progress', 'mute', 'volume', 'fullscreen']
+  });
+
+  video.addEventListener('loadedmetadata', function () {
+    video.play();
+  });
 </script>
 
 </body>
