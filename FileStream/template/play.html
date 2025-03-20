@@ -59,6 +59,10 @@
       .tap-right {
         right: 0;
       }
+      .hide-taps .tap-left,
+      .hide-taps .tap-right {
+        display: none !important;
+      }
     }
 
     /* Override Plyr hide behavior */
@@ -86,7 +90,7 @@
   video.src = videoSrc;
   const player = new Plyr(video, {
     controls: ['play', 'progress', 'mute', 'volume', 'fullscreen'],
-    hideControls: true // We'll handle it manually
+    hideControls: true
   });
 
   video.addEventListener('loadedmetadata', () => video.play());
@@ -97,25 +101,39 @@
     let lastTapLeft = 0;
     let lastTapRight = 0;
 
-    document.querySelector('.tap-left').addEventListener('touchend', (e) => {
-      const currentTime = new Date().getTime();
-      if (currentTime - lastTapLeft < 300) {
-        video.currentTime = Math.max(video.currentTime - 10, 0);
+    const tapLeft = document.querySelector('.tap-left');
+    const tapRight = document.querySelector('.tap-right');
+    const tapControls = document.querySelector('.tap-controls');
+
+    tapLeft.addEventListener('touchend', () => {
+      if (player.elements.container.classList.contains('plyr--hide-controls')) {
+        const currentTime = new Date().getTime();
+        if (currentTime - lastTapLeft < 300) {
+          video.currentTime = Math.max(video.currentTime - 10, 0);
+        }
+        lastTapLeft = currentTime;
       }
-      lastTapLeft = currentTime;
     });
 
-    document.querySelector('.tap-right').addEventListener('touchend', (e) => {
-      const currentTime = new Date().getTime();
-      if (currentTime - lastTapRight < 300) {
-        video.currentTime = Math.min(video.currentTime + 10, video.duration);
+    tapRight.addEventListener('touchend', () => {
+      if (player.elements.container.classList.contains('plyr--hide-controls')) {
+        const currentTime = new Date().getTime();
+        if (currentTime - lastTapRight < 300) {
+          video.currentTime = Math.min(video.currentTime + 10, video.duration);
+        }
+        lastTapRight = currentTime;
       }
-      lastTapRight = currentTime;
     });
 
-    // Single tap at center toggles controls
-    document.querySelector('.tap-controls').addEventListener('touchend', () => {
+    // Toggle controls and hide tap zones if controls are visible
+    tapControls.addEventListener('touchend', () => {
       player.elements.container.classList.toggle('plyr--hide-controls');
+
+      if (player.elements.container.classList.contains('plyr--hide-controls')) {
+        document.body.classList.remove('hide-taps');
+      } else {
+        document.body.classList.add('hide-taps');
+      }
     });
   }
 </script>
