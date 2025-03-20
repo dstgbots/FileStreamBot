@@ -15,6 +15,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
     }
     video {
       max-width: 100%;
@@ -31,7 +32,6 @@
         object-fit: cover;
       }
     }
-    /* Double tap zones for mobile */
     .tap-zone {
       display: none;
     }
@@ -62,17 +62,18 @@
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 <script>
   const video = document.getElementById('player');
-  const videoSrc = '{{file_url}}'; // Replace with your direct video file URL
+  const videoSrc = '{{file_url}}'; // Replace with your direct video URL
 
   video.src = videoSrc;
   const player = new Plyr(video, {
-    controls: ['play', 'progress', 'mute', 'volume', 'fullscreen']
+    controls: ['play', 'progress', 'mute', 'volume', 'fullscreen'],
+    hideControls: false
   });
 
   video.addEventListener('loadedmetadata', () => video.play());
 
-  // Double-tap on mobile only
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
+  
   if (isMobile) {
     let lastTapLeft = 0;
     let lastTapRight = 0;
@@ -91,6 +92,26 @@
         video.currentTime = Math.min(video.currentTime + 10, video.duration);
       }
       lastTapRight = currentTime;
+    });
+
+    // Single tap to show/hide controls
+    let tapTimeout;
+    video.addEventListener('touchend', (e) => {
+      // Prevent double-tap zone touches from interfering
+      if (e.target.classList.contains('tap-left') || e.target.classList.contains('tap-right')) return;
+      if (tapTimeout) {
+        clearTimeout(tapTimeout);
+        tapTimeout = null;
+      } else {
+        tapTimeout = setTimeout(() => {
+          if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
+            player.toggleControls(true);
+          } else {
+            player.toggleControls(false);
+          }
+          tapTimeout = null;
+        }, 250);
+      }
     });
   }
 </script>
