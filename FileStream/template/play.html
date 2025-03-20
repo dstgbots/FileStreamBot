@@ -12,35 +12,87 @@
       height: 100%;
       width: 100%;
       background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
+      max-width: 100%;
+      height: auto;
       background-color: black;
+    }
+    @media (min-width: 768px) {
+      body {
+        display: block;
+      }
+      video {
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+      }
+    }
+    /* Double tap zones for mobile */
+    .tap-zone {
+      display: none;
+    }
+    @media (max-width: 767px) {
+      .tap-zone {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        width: 50%;
+        z-index: 10;
+        display: block;
+      }
+      .tap-left {
+        left: 0;
+      }
+      .tap-right {
+        right: 0;
+      }
     }
   </style>
 </head>
 <body>
 
-<video id="player" controls></video>
+<video id="player" controls playsinline></video>
+<div class="tap-zone tap-left"></div>
+<div class="tap-zone tap-right"></div>
 
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 <script>
   const video = document.getElementById('player');
-  const videoSrc = '{{file_url}}'; // Replace with your direct video file URL (like MP4)
+  const videoSrc = '{{file_url}}'; // Replace with your direct video file URL
 
-  // Set the source directly
   video.src = videoSrc;
-
-  // Initialize Plyr
   const player = new Plyr(video, {
     controls: ['play', 'progress', 'mute', 'volume', 'fullscreen']
   });
 
-  video.addEventListener('loadedmetadata', function () {
-    video.play();
-  });
+  video.addEventListener('loadedmetadata', () => video.play());
+
+  // Double-tap on mobile only
+  const isMobile = window.matchMedia("(max-width: 767px)").matches;
+  if (isMobile) {
+    let lastTapLeft = 0;
+    let lastTapRight = 0;
+
+    document.querySelector('.tap-left').addEventListener('touchend', (e) => {
+      const currentTime = new Date().getTime();
+      if (currentTime - lastTapLeft < 300) {
+        video.currentTime = Math.max(video.currentTime - 10, 0);
+      }
+      lastTapLeft = currentTime;
+    });
+
+    document.querySelector('.tap-right').addEventListener('touchend', (e) => {
+      const currentTime = new Date().getTime();
+      if (currentTime - lastTapRight < 300) {
+        video.currentTime = Math.min(video.currentTime + 10, video.duration);
+      }
+      lastTapRight = currentTime;
+    });
+  }
 </script>
 
 </body>
