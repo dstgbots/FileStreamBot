@@ -40,13 +40,26 @@
         position: absolute;
         top: 0;
         height: 100%;
-        width: 50%;
         z-index: 5;
         display: block;
       }
-      .tap-left { left: 0; }
-      .tap-right { right: 0; }
-      .show-zones .tap-zone { display: block; }
+      .tap-left {
+        width: 30%;
+        left: 0;
+      }
+      .tap-center {
+        width: 40%;
+        left: 30%;
+      }
+      .tap-right {
+        width: 30%;
+        right: 0;
+      }
+      .show-zones .tap-left,
+      .show-zones .tap-right {
+        display: block;
+      }
+      .tap-center { display: block; }
     }
     .tap-feedback {
       position: absolute;
@@ -58,14 +71,8 @@
       z-index: 15;
       animation: fadeScale 0.8s forwards;
     }
-    .tap-feedback.left {
-      left: 20%;
-      top: 40%;
-    }
-    .tap-feedback.right {
-      right: 20%;
-      top: 40%;
-    }
+    .tap-feedback.left { left: 20%; top: 40%; }
+    .tap-feedback.right { right: 20%; top: 40%; }
     @keyframes fadeScale {
       0% { opacity: 0; transform: scale(0.8); }
       20% { opacity: 1; transform: scale(1.1); }
@@ -78,8 +85,10 @@
 
 <video id="player" controls playsinline></video>
 <div class="tap-zone tap-left"></div>
+<div class="tap-zone tap-center"></div>
 <div class="tap-zone tap-right"></div>
-<!-- Feedback animation elements -->
+
+<!-- Feedback Animation Elements -->
 <div id="feedback-left" class="tap-feedback left">-10s</div>
 <div id="feedback-right" class="tap-feedback right">+10s</div>
 
@@ -87,7 +96,6 @@
 <script>
   const video = document.getElementById('player');
   const videoSrc = '{{file_url}}'; // Replace with your direct video URL
-
   video.src = videoSrc;
   const player = new Plyr(video, {
     controls: ['play', 'progress', 'mute', 'volume', 'fullscreen'],
@@ -97,6 +105,7 @@
   video.addEventListener('loadedmetadata', () => video.play());
 
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
+
   if (isMobile) {
     const body = document.body;
     const feedbackLeft = document.getElementById('feedback-left');
@@ -110,7 +119,7 @@
 
     const showFeedback = (element) => {
       element.style.animation = 'none';
-      element.offsetHeight; // trigger reflow
+      element.offsetHeight; // reflow
       element.style.animation = '';
       element.style.animation = 'fadeScale 0.8s forwards';
     };
@@ -119,26 +128,29 @@
     let lastTapRight = 0;
 
     document.querySelector('.tap-left').addEventListener('touchend', () => {
-      const currentTime = new Date().getTime();
-      if (currentTime - lastTapLeft < 300) {
-        video.currentTime = Math.max(video.currentTime - 10, 0);
-        showFeedback(feedbackLeft);
+      if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
+        const currentTime = new Date().getTime();
+        if (currentTime - lastTapLeft < 300) {
+          video.currentTime = Math.max(video.currentTime - 10, 0);
+          showFeedback(feedbackLeft);
+        }
+        lastTapLeft = currentTime;
       }
-      lastTapLeft = currentTime;
     });
 
     document.querySelector('.tap-right').addEventListener('touchend', () => {
-      const currentTime = new Date().getTime();
-      if (currentTime - lastTapRight < 300) {
-        video.currentTime = Math.min(video.currentTime + 10, video.duration);
-        showFeedback(feedbackRight);
+      if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
+        const currentTime = new Date().getTime();
+        if (currentTime - lastTapRight < 300) {
+          video.currentTime = Math.min(video.currentTime + 10, video.duration);
+          showFeedback(feedbackRight);
+        }
+        lastTapRight = currentTime;
       }
-      lastTapRight = currentTime;
     });
 
-    // Single tap toggles controls
-    video.addEventListener('touchend', (e) => {
-      if (e.target.classList.contains('tap-left') || e.target.classList.contains('tap-right')) return;
+    // Center tap toggles controls
+    document.querySelector('.tap-center').addEventListener('touchend', () => {
       if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
         player.toggleControls(true);
       } else {
