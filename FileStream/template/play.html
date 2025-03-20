@@ -60,6 +60,15 @@
         right: 0;
       }
     }
+
+    /* Override Plyr hide behavior */
+    .plyr--hide-controls .plyr__controls {
+      opacity: 0 !important;
+      pointer-events: none;
+    }
+    .plyr__controls {
+      transition: opacity 0.3s;
+    }
   </style>
 </head>
 <body>
@@ -77,7 +86,7 @@
   video.src = videoSrc;
   const player = new Plyr(video, {
     controls: ['play', 'progress', 'mute', 'volume', 'fullscreen'],
-    hideControls: false
+    hideControls: true // We'll handle it manually
   });
 
   video.addEventListener('loadedmetadata', () => video.play());
@@ -88,7 +97,6 @@
     let lastTapLeft = 0;
     let lastTapRight = 0;
 
-    // Double-tap on left
     document.querySelector('.tap-left').addEventListener('touchend', (e) => {
       const currentTime = new Date().getTime();
       if (currentTime - lastTapLeft < 300) {
@@ -97,7 +105,6 @@
       lastTapLeft = currentTime;
     });
 
-    // Double-tap on right
     document.querySelector('.tap-right').addEventListener('touchend', (e) => {
       const currentTime = new Date().getTime();
       if (currentTime - lastTapRight < 300) {
@@ -106,13 +113,9 @@
       lastTapRight = currentTime;
     });
 
-    // Single tap in the center zone toggles controls
+    // Single tap at center toggles controls
     document.querySelector('.tap-controls').addEventListener('touchend', () => {
-      if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
-        player.toggleControls(true);
-      } else {
-        player.toggleControls(false);
-      }
+      player.elements.container.classList.toggle('plyr--hide-controls');
     });
   }
 </script>
