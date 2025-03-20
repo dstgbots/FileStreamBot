@@ -40,44 +40,25 @@
         position: absolute;
         top: 0;
         height: 100%;
-        z-index: 5;
+        width: 40%;
+        z-index: 10;
+        display: block;
+      }
+      .tap-controls {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        width: 20%;
+        left: 40%;
+        z-index: 10;
         display: block;
       }
       .tap-left {
-        width: 30%;
         left: 0;
       }
-      .tap-center {
-        width: 40%;
-        left: 30%;
-      }
       .tap-right {
-        width: 30%;
         right: 0;
       }
-      .show-zones .tap-left,
-      .show-zones .tap-right {
-        display: block;
-      }
-      .tap-center { display: block; }
-    }
-    .tap-feedback {
-      position: absolute;
-      color: white;
-      font-size: 2rem;
-      font-weight: bold;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 15;
-      animation: fadeScale 0.8s forwards;
-    }
-    .tap-feedback.left { left: 20%; top: 40%; }
-    .tap-feedback.right { right: 20%; top: 40%; }
-    @keyframes fadeScale {
-      0% { opacity: 0; transform: scale(0.8); }
-      20% { opacity: 1; transform: scale(1.1); }
-      70% { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(0.9); }
     }
   </style>
 </head>
@@ -85,21 +66,18 @@
 
 <video id="player" controls playsinline></video>
 <div class="tap-zone tap-left"></div>
-<div class="tap-zone tap-center"></div>
+<div class="tap-controls"></div>
 <div class="tap-zone tap-right"></div>
-
-<!-- Feedback Animation Elements -->
-<div id="feedback-left" class="tap-feedback left">-10s</div>
-<div id="feedback-right" class="tap-feedback right">+10s</div>
 
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 <script>
   const video = document.getElementById('player');
   const videoSrc = '{{file_url}}'; // Replace with your direct video URL
+
   video.src = videoSrc;
   const player = new Plyr(video, {
     controls: ['play', 'progress', 'mute', 'volume', 'fullscreen'],
-    hideControls: true
+    hideControls: false
   });
 
   video.addEventListener('loadedmetadata', () => video.play());
@@ -107,50 +85,29 @@
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
   if (isMobile) {
-    const body = document.body;
-    const feedbackLeft = document.getElementById('feedback-left');
-    const feedbackRight = document.getElementById('feedback-right');
-
-    const showTapZones = () => body.classList.add('show-zones');
-    const hideTapZones = () => body.classList.remove('show-zones');
-
-    player.on('controlshidden', showTapZones);
-    player.on('controlsshown', hideTapZones);
-
-    const showFeedback = (element) => {
-      element.style.animation = 'none';
-      element.offsetHeight; // reflow
-      element.style.animation = '';
-      element.style.animation = 'fadeScale 0.8s forwards';
-    };
-
     let lastTapLeft = 0;
     let lastTapRight = 0;
 
-    document.querySelector('.tap-left').addEventListener('touchend', () => {
-      if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
-        const currentTime = new Date().getTime();
-        if (currentTime - lastTapLeft < 300) {
-          video.currentTime = Math.max(video.currentTime - 10, 0);
-          showFeedback(feedbackLeft);
-        }
-        lastTapLeft = currentTime;
+    // Double-tap on left
+    document.querySelector('.tap-left').addEventListener('touchend', (e) => {
+      const currentTime = new Date().getTime();
+      if (currentTime - lastTapLeft < 300) {
+        video.currentTime = Math.max(video.currentTime - 10, 0);
       }
+      lastTapLeft = currentTime;
     });
 
-    document.querySelector('.tap-right').addEventListener('touchend', () => {
-      if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
-        const currentTime = new Date().getTime();
-        if (currentTime - lastTapRight < 300) {
-          video.currentTime = Math.min(video.currentTime + 10, video.duration);
-          showFeedback(feedbackRight);
-        }
-        lastTapRight = currentTime;
+    // Double-tap on right
+    document.querySelector('.tap-right').addEventListener('touchend', (e) => {
+      const currentTime = new Date().getTime();
+      if (currentTime - lastTapRight < 300) {
+        video.currentTime = Math.min(video.currentTime + 10, video.duration);
       }
+      lastTapRight = currentTime;
     });
 
-    // Center tap toggles controls
-    document.querySelector('.tap-center').addEventListener('touchend', () => {
+    // Single tap in the center zone toggles controls
+    document.querySelector('.tap-controls').addEventListener('touchend', () => {
       if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
         player.toggleControls(true);
       } else {
