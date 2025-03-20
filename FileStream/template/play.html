@@ -64,14 +64,18 @@
         display: none !important;
       }
     }
-
-    /* Override Plyr hide behavior */
-    .plyr--hide-controls .plyr__controls {
-      opacity: 0 !important;
-      pointer-events: none;
+    .custom-skip-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 0 5px;
+      transition: background 0.3s;
     }
-    .plyr__controls {
-      transition: opacity 0.3s;
+    .custom-skip-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
   </style>
 </head>
@@ -89,11 +93,49 @@
 
   video.src = videoSrc;
   const player = new Plyr(video, {
-    controls: ['play', 'progress', 'mute', 'volume', 'fullscreen'],
-    hideControls: true
+    controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+    hideControls: true,
   });
 
   video.addEventListener('loadedmetadata', () => video.play());
+
+  // Add custom skip buttons in controls after Plyr is ready
+  player.on('ready', () => {
+    const controls = player.elements.controls;
+
+    // Create -10 button
+    const minusBtn = document.createElement('button');
+    minusBtn.innerText = '-10';
+    minusBtn.classList.add('custom-skip-btn');
+    minusBtn.onclick = () => {
+      video.currentTime = Math.max(video.currentTime - 10, 0);
+    };
+
+    // Create +10 button
+    const plusBtn = document.createElement('button');
+    plusBtn.innerText = '+10';
+    plusBtn.classList.add('custom-skip-btn');
+    plusBtn.onclick = () => {
+      video.currentTime = Math.min(video.currentTime + 10, video.duration);
+    };
+
+    // Insert buttons after progress bar
+    const progressBar = controls.querySelector('.plyr__progress');
+    progressBar.parentNode.insertBefore(minusBtn, progressBar.nextSibling);
+    progressBar.parentNode.insertBefore(plusBtn, minusBtn.nextSibling);
+
+    // Show total duration next to current time
+    const currentTimeElement = controls.querySelector('.plyr__time--current');
+    const durationElement = document.createElement('span');
+    durationElement.classList.add('plyr__time--duration');
+    durationElement.style.marginLeft = '6px';
+    const updateDuration = () => {
+      durationElement.textContent = `/ ${player.formatTime(video.duration)}`;
+    };
+    video.addEventListener('loadedmetadata', updateDuration);
+    video.addEventListener('durationchange', updateDuration);
+    currentTimeElement.parentNode.appendChild(durationElement);
+  });
 
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
@@ -125,10 +167,9 @@
       }
     });
 
-    // Toggle controls and hide tap zones if controls are visible
+    // Toggle controls and tap zones
     tapControls.addEventListener('touchend', () => {
       player.elements.container.classList.toggle('plyr--hide-controls');
-
       if (player.elements.container.classList.contains('plyr--hide-controls')) {
         document.body.classList.remove('hide-taps');
       } else {
