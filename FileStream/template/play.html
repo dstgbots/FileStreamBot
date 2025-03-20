@@ -41,15 +41,36 @@
         top: 0;
         height: 100%;
         width: 50%;
-        z-index: 10;
+        z-index: 5;
         display: block;
       }
-      .tap-left {
-        left: 0;
-      }
-      .tap-right {
-        right: 0;
-      }
+      .tap-left { left: 0; }
+      .tap-right { right: 0; }
+      .show-zones .tap-zone { display: block; }
+    }
+    .tap-feedback {
+      position: absolute;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 15;
+      animation: fadeScale 0.8s forwards;
+    }
+    .tap-feedback.left {
+      left: 20%;
+      top: 40%;
+    }
+    .tap-feedback.right {
+      right: 20%;
+      top: 40%;
+    }
+    @keyframes fadeScale {
+      0% { opacity: 0; transform: scale(0.8); }
+      20% { opacity: 1; transform: scale(1.1); }
+      70% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.9); }
     }
   </style>
 </head>
@@ -58,6 +79,9 @@
 <video id="player" controls playsinline></video>
 <div class="tap-zone tap-left"></div>
 <div class="tap-zone tap-right"></div>
+<!-- Feedback animation elements -->
+<div id="feedback-left" class="tap-feedback left">-10s</div>
+<div id="feedback-right" class="tap-feedback right">+10s</div>
 
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 <script>
@@ -67,50 +91,58 @@
   video.src = videoSrc;
   const player = new Plyr(video, {
     controls: ['play', 'progress', 'mute', 'volume', 'fullscreen'],
-    hideControls: false
+    hideControls: true
   });
 
   video.addEventListener('loadedmetadata', () => video.play());
 
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
-  
   if (isMobile) {
+    const body = document.body;
+    const feedbackLeft = document.getElementById('feedback-left');
+    const feedbackRight = document.getElementById('feedback-right');
+
+    const showTapZones = () => body.classList.add('show-zones');
+    const hideTapZones = () => body.classList.remove('show-zones');
+
+    player.on('controlshidden', showTapZones);
+    player.on('controlsshown', hideTapZones);
+
+    const showFeedback = (element) => {
+      element.style.animation = 'none';
+      element.offsetHeight; // trigger reflow
+      element.style.animation = '';
+      element.style.animation = 'fadeScale 0.8s forwards';
+    };
+
     let lastTapLeft = 0;
     let lastTapRight = 0;
 
-    document.querySelector('.tap-left').addEventListener('touchend', (e) => {
+    document.querySelector('.tap-left').addEventListener('touchend', () => {
       const currentTime = new Date().getTime();
       if (currentTime - lastTapLeft < 300) {
         video.currentTime = Math.max(video.currentTime - 10, 0);
+        showFeedback(feedbackLeft);
       }
       lastTapLeft = currentTime;
     });
 
-    document.querySelector('.tap-right').addEventListener('touchend', (e) => {
+    document.querySelector('.tap-right').addEventListener('touchend', () => {
       const currentTime = new Date().getTime();
       if (currentTime - lastTapRight < 300) {
         video.currentTime = Math.min(video.currentTime + 10, video.duration);
+        showFeedback(feedbackRight);
       }
       lastTapRight = currentTime;
     });
 
-    // Single tap to show/hide controls
-    let tapTimeout;
+    // Single tap toggles controls
     video.addEventListener('touchend', (e) => {
-      // Prevent double-tap zone touches from interfering
       if (e.target.classList.contains('tap-left') || e.target.classList.contains('tap-right')) return;
-      if (tapTimeout) {
-        clearTimeout(tapTimeout);
-        tapTimeout = null;
+      if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
+        player.toggleControls(true);
       } else {
-        tapTimeout = setTimeout(() => {
-          if (player.elements.controls.classList.contains('plyr__controls--hidden')) {
-            player.toggleControls(true);
-          } else {
-            player.toggleControls(false);
-          }
-          tapTimeout = null;
-        }, 250);
+        player.toggleControls(false);
       }
     });
   }
