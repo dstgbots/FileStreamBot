@@ -3,140 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Custom VLC-Style Video Player</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <title>Awesome MP4 Player</title>
+  <link href="https://vjs.zencdn.net/8.9.0/video-js.css" rel="stylesheet" />
   <style>
-    body {
+    html, body {
       margin: 0;
-      background: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background-color: #000;
+      overflow: hidden;
+    }
+    #my-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
       height: 100vh;
+      object-fit: cover;
     }
-    .video-container {
-      position: relative;
-      width: 100%;
-      max-width: 700px;
-    }
-    video {
-      width: 100%;
-      display: block;
-    }
-    .controls {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      transition: opacity 0.3s;
-    }
-    .hidden { opacity: 0; pointer-events: none; }
-    .play-btn {
-      position: absolute;
+    .video-js .vjs-big-play-button {
+      font-size: 4em;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 50px;
-      color: white;
-      cursor: pointer;
-      transition: opacity 0.3s;
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+      background: rgba(0,0,0,0.6);
+      border: none;
     }
-    .progress-bar {
-      flex: 1;
-      height: 5px;
-      background: gray;
-      cursor: pointer;
-      position: relative;
-      margin: 0 10px;
+    .vjs-control-bar {
+      font-size: 1.2em;
     }
-    .progress {
-      height: 100%;
-      width: 0;
-      background: orange;
-    }
-    .time { color: white; font-size: 14px; margin: 0 10px; }
-    .tap-zone {
-      position: absolute;
-      width: 50%;
-      height: 100%;
-      top: 0;
-    }
-    .left { left: 0; }
-    .right { right: 0; }
   </style>
 </head>
 <body>
-  <div class="video-container">
-    <video id="video" src="{{file_url}}"></video>
-    <i class="fa fa-play play-btn" id="playBtn"></i>
-    <div class="tap-zone left" id="leftTap"></div>
-    <div class="tap-zone right" id="rightTap"></div>
-    <div class="controls hidden" id="controls">
-      <i class="fa fa-play" id="playPause"></i>
-      <span class="time" id="currentTime">0:00</span>
-      <div class="progress-bar" id="progressBar">
-        <div class="progress" id="progress"></div>
-      </div>
-      <span class="time" id="totalTime">0:00</span>
-      <i class="fa fa-expand" id="fullscreen"></i>
-    </div>
-  </div>
-  <script>
-    const video = document.getElementById('video');
-    const playBtn = document.getElementById('playBtn');
-    const playPause = document.getElementById('playPause');
-    const controls = document.getElementById('controls');
-    const progressBar = document.getElementById('progressBar');
-    const progress = document.getElementById('progress');
-    const currentTime = document.getElementById('currentTime');
-    const totalTime = document.getElementById('totalTime');
-    const leftTap = document.getElementById('leftTap');
-    const rightTap = document.getElementById('rightTap');
-    
-    let hideControlsTimeout;
-    function showControls() {
-      controls.classList.remove('hidden');
-      clearTimeout(hideControlsTimeout);
-      hideControlsTimeout = setTimeout(() => controls.classList.add('hidden'), 3000);
-    }
-    function togglePlay() {
-      if (video.paused) { video.play(); playBtn.style.opacity = '0'; }
-      else { video.pause(); playBtn.style.opacity = '1'; }
-      updatePlayIcon();
-    }
-    function updatePlayIcon() {
-      playPause.classList.toggle('fa-play', video.paused);
-      playPause.classList.toggle('fa-pause', !video.paused);
-    }
-    function updateProgress() {
-      const percent = (video.currentTime / video.duration) * 100;
-      progress.style.width = `${percent}%`;
-      currentTime.textContent = formatTime(video.currentTime);
-    }
-    function setProgress(e) {
-      const newTime = (e.offsetX / progressBar.offsetWidth) * video.duration;
-      video.currentTime = newTime;
-    }
-    function formatTime(time) {
-      const minutes = Math.floor(time / 60);
-      const seconds = Math.floor(time % 60);
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
-    function skip(seconds) {
-      video.currentTime += seconds;
-      showControls();
-    }
-    playBtn.addEventListener('click', togglePlay);
-    playPause.addEventListener('click', togglePlay);
-    video.addEventListener('timeupdate', updateProgress);
-    video.addEventListener('click', showControls);
-    video.addEventListener('loadedmetadata', () => { totalTime.textContent = formatTime(video.duration); });
-    progressBar.addEventListener('click', setProgress);
-    leftTap.addEventListener('dblclick', () => skip(-10));
-    rightTap.addEventListener('dblclick', () => skip(10));
-  </script>
+
+<video
+  id="my-video"
+  class="video-js vjs-big-play-centered"
+  controls
+  preload="auto"
+  poster="https://via.placeholder.com/1920x1080.png?text=Video+Thumbnail"
+  data-setup='{}'>
+  <source src="{{file_url}}" type="video/mp4" />
+  <p class="vjs-no-js">
+    To view this video please enable JavaScript, and consider upgrading to a
+    web browser that
+    <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+  </p>
+</video>
+
+<script src="https://vjs.zencdn.net/8.9.0/video.min.js"></script>
+
 </body>
 </html>
