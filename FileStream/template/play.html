@@ -10,7 +10,6 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      width: 100%;
       background: black;
       overflow: hidden;
       position: relative;
@@ -19,7 +18,6 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-      background-color: black;
     }
     .thumbnail-overlay {
       position: absolute;
@@ -27,7 +25,6 @@
       left: 0;
       height: 100%;
       width: 100%;
-      background-color: black;
       background-size: cover;
       background-position: center;
       display: flex;
@@ -35,6 +32,7 @@
       align-items: center;
       z-index: 20;
       cursor: pointer;
+      background-color: rgba(0, 0, 0, 0.7);
     }
     .thumbnail-overlay .play-btn {
       width: 90px;
@@ -44,8 +42,6 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      transition: all 0.3s;
-      box-shadow: 0 0 20px rgba(255,255,255,0.2);
     }
     .thumbnail-overlay .play-btn::after {
       content: '';
@@ -54,28 +50,48 @@
       border-color: transparent transparent transparent white;
       margin-left: 6px;
     }
-    .gesture-zone {
-      position: absolute;
-      top: 0;
-      height: 100%;
-      width: 100%;
-      z-index: 15;
-    }
-    .zone-left, .zone-right, .zone-center {
-      position: absolute;
-      top: 0;
-      height: 100%;
-    }
+    .gesture-zone { position: absolute; top: 0; height: 100%; width: 100%; z-index: 15; }
+    .zone-left, .zone-right, .zone-center { position: absolute; top: 0; height: 100%; }
     .zone-left { width: 30%; left: 0; }
     .zone-right { width: 30%; right: 0; }
     .zone-center { width: 40%; left: 30%; }
-    .plyr__controls {
-      transition: opacity 0.3s ease;
+    .plyr--hide-controls .plyr__controls { opacity: 0 !important; pointer-events: none; transition: opacity 0.3s; }
+
+    /* Custom controls container for skip buttons */
+    .custom-controls {
+      position: absolute;
+      bottom: 70px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      z-index: 16;
     }
-    .plyr--hide-controls .plyr__controls {
-      opacity: 0 !important;
-      pointer-events: none;
+    .custom-skip-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-size: 16px;
     }
+    .custom-skip-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .skip-feedback {
+      position: absolute;
+      top: 50%;
+      font-size: 32px;
+      color: white;
+      opacity: 0;
+      transition: opacity 0.3s;
+      transform: translateY(-50%);
+    }
+    .feedback-left { left: 20%; }
+    .feedback-right { right: 20%; }
+    .show-feedback { opacity: 1 !important; }
   </style>
 </head>
 <body>
@@ -83,6 +99,16 @@
 <video id="player" playsinline></video>
 <div class="thumbnail-overlay" id="thumbnail" style="background-image: url('{{thumbnail_url}}');">
   <div class="play-btn"></div>
+</div>
+
+<!-- Skip feedback overlays -->
+<div class="skip-feedback feedback-left" id="feedbackLeft">-10s</div>
+<div class="skip-feedback feedback-right" id="feedbackRight">+10s</div>
+
+<!-- Custom controls for skip -->
+<div class="custom-controls">
+  <button class="custom-skip-btn" id="backwardBtn">-10s</button>
+  <button class="custom-skip-btn" id="forwardBtn">+10s</button>
 </div>
 
 <div class="gesture-zone">
@@ -96,6 +122,8 @@
   const video = document.getElementById('player');
   const videoSrc = '{{file_url}}';
   const thumbnail = document.getElementById('thumbnail');
+  const feedbackLeft = document.getElementById('feedbackLeft');
+  const feedbackRight = document.getElementById('feedbackRight');
 
   const player = new Plyr(video, {
     controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
@@ -108,26 +136,26 @@
     video.play();
   });
 
+  function showFeedback(element) {
+    element.classList.add('show-feedback');
+    setTimeout(() => element.classList.remove('show-feedback'), 500);
+  }
+
+  document.getElementById('backwardBtn').addEventListener('click', () => {
+    video.currentTime = Math.max(video.currentTime - 10, 0);
+    showFeedback(feedbackLeft);
+  });
+  document.getElementById('forwardBtn').addEventListener('click', () => {
+    video.currentTime = Math.min(video.currentTime + 10, video.duration);
+    showFeedback(feedbackRight);
+  });
+
+  // Add total duration next to current time
   player.on('ready', () => {
-    const controls = player.elements.controls;
-
-    const minusBtn = document.createElement('button');
-    minusBtn.innerText = '-10s';
-    minusBtn.classList.add('custom-skip-btn');
-    minusBtn.onclick = () => video.currentTime = Math.max(video.currentTime - 10, 0);
-
-    const plusBtn = document.createElement('button');
-    plusBtn.innerText = '+10s';
-    plusBtn.classList.add('custom-skip-btn');
-    plusBtn.onclick = () => video.currentTime = Math.min(video.currentTime + 10, video.duration);
-
-    const progressBar = controls.querySelector('.plyr__progress');
-    progressBar.parentNode.insertBefore(minusBtn, progressBar.nextSibling);
-    progressBar.parentNode.insertBefore(plusBtn, minusBtn.nextSibling);
-
-    const currentTimeElement = controls.querySelector('.plyr__time--current');
+    const currentTimeElement = player.elements.controls.querySelector('.plyr__time--current');
     const durationElement = document.createElement('span');
     durationElement.classList.add('plyr__time--duration');
+    durationElement.style.marginLeft = '6px';
 
     const updateDuration = () => {
       durationElement.textContent = `/ ${player.formatTime(video.duration)}`;
@@ -138,28 +166,30 @@
     currentTimeElement.parentNode.appendChild(durationElement);
   });
 
-  // Gesture handling
+  // Gesture logic
   let singleTapTimer = null;
-
   function singleTapAction() {
-    if (player.elements.container.classList.contains('plyr--hide-controls')) {
-      player.elements.container.classList.remove('plyr--hide-controls');
-    } else {
-      player.elements.container.classList.add('plyr--hide-controls');
-    }
+    player.elements.container.classList.toggle('plyr--hide-controls');
   }
-
   function doubleTapAction(action) {
-    if (action === 'left') video.currentTime = Math.max(video.currentTime - 10, 0);
-    if (action === 'right') video.currentTime = Math.min(video.currentTime + 10, video.duration);
-    if (action === 'center') video.paused ? video.play() : video.pause();
+    if (action === 'left') {
+      video.currentTime = Math.max(video.currentTime - 10, 0);
+      showFeedback(feedbackLeft);
+    }
+    if (action === 'right') {
+      video.currentTime = Math.min(video.currentTime + 10, video.duration);
+      showFeedback(feedbackRight);
+    }
+    if (action === 'center') {
+      video.paused ? video.play() : video.pause();
+    }
   }
 
   function setupDoubleTap(zone, action) {
     let lastTap = 0;
-    zone.addEventListener('touchend', (e) => {
-      const currentTime = new Date().getTime();
-      if (currentTime - lastTap < 300) {
+    zone.addEventListener('touchend', () => {
+      const now = Date.now();
+      if (now - lastTap < 300) {
         clearTimeout(singleTapTimer);
         doubleTapAction(action);
       } else {
@@ -169,7 +199,7 @@
           }
         }, 300);
       }
-      lastTap = currentTime;
+      lastTap = now;
     });
   }
 
@@ -177,5 +207,6 @@
   setupDoubleTap(document.querySelector('.zone-right'), 'right');
   setupDoubleTap(document.querySelector('.zone-center'), 'center');
 </script>
+
 </body>
 </html>
