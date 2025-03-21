@@ -1,89 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Stream | {{file_name}}</title>
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      background-color: #000;
-      position: relative;
-    }
-    video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-    }
-    .center-play-button {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      background: rgba(0, 0, 0, 0.7);
-      border: none;
-      color: #fff;
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Stream | {{file_name}}</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        background-color: #000;
+        position: relative;
+      }
+      video {
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+      }
+      .center-play-button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        color: #fff;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <video id="player" playsinline controls poster="https://via.placeholder.com/1920x1080.png?text=Video+Thumbnail">
+      <source src="{{file_url}}" type="video/mp4" />
+    </video>
 
-<button class="center-play-button" id="centerPlay">▶</button>
-<video id="player" playsinline controls poster="https://via.placeholder.com/1920x1080.png?text=Video+Thumbnail">
-  <source src="{{file_url}}" type="video/mp4" />
-</video>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    <script>
+      const player = new Plyr('#player', {
+        controls: [
+          'play-large',
+          'current-time',
+          'duration',
+          'rewind',
+          'play',
+          'fast-forward',
+          'progress',
+          'mute',
+          'settings',
+          'fullscreen',
+        ],
+        i18n: {
+          restart: 'Restart',
+          rewind: 'Rewind {seektime} seconds',
+          play: 'Play',
+          pause: 'Pause',
+          fastForward: 'Forward {seektime} seconds',
+          seek: 'Seek',
+          played: 'Played',
+          buffered: 'Buffered',
+          currentTime: 'Current time',
+          duration: 'Duration',
+          volume: 'Volume',
+          mute: 'Mute',
+          unmute: 'Unmute',
+          enableCaptions: 'Enable captions',
+          disableCaptions: 'Disable captions',
+          enterFullscreen: 'Enter fullscreen',
+          exitFullscreen: 'Exit fullscreen',
+          frameTitle: 'Player for {title}',
+          captions: 'Captions',
+          settings: 'Settings',
+          speed: 'Speed',
+          normal: 'Normal',
+          quality: 'Quality',
+          loop: 'Loop',
+          start: 'Start',
+          end: 'End',
+          all: 'All',
+          reset: 'Reset',
+          disabled: 'Disabled',
+          advertisement: 'Advertisement',
+        },
+      });
 
-<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-<script>
-  const player = new Plyr('#player', {
-    controls: [
-      'play',
-      'progress',
-      'current-time',
-      'mute',
-      'volume',
-      'fullscreen'
-    ]
-  });
-
-  const centerPlayBtn = document.getElementById('centerPlay');
-  centerPlayBtn.addEventListener('click', () => {
-    player.play();
-    centerPlayBtn.style.display = 'none';
-  });
-
-  // Add custom seek controls
-  const seekBackButton = document.createElement('button');
-  seekBackButton.textContent = '-10s';
-  seekBackButton.className = 'plyr__control plyr__control--seek-back';
-  seekBackButton.onclick = () => player.currentTime = player.currentTime - 10;
-
-  const seekForwardButton = document.createElement('button');
-  seekForwardButton.textContent = '+10s';
-  seekForwardButton.className = 'plyr__control plyr__control--seek-forward';
-  seekForwardButton.onclick = () => player.currentTime = player.currentTime + 10;
-
-  player.on('ready', () => {
-    const controlBar = document.querySelector('.plyr__controls');
-    if (controlBar) {
-      controlBar.insertBefore(seekBackButton, controlBar.firstChild);
-      controlBar.appendChild(seekForwardButton);
-    }
-  });
-</script>
-
-</body>
+      const centerPlayBtn = document.getElementById('centerPlay');
+      centerPlayBtn.addEventListener('click', () => {
+        player.play();
+        centerPlayBtn.style.display = 'none';
+      });
+    </script>
+  </body>
 </html>
