@@ -1,212 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>File Streamer | {{file_name}}</title>
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom VLC-Style Video Player</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
       background: black;
-      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .video-container {
       position: relative;
+      width: 100%;
+      max-width: 700px;
     }
     video {
       width: 100%;
-      height: 100%;
-      object-fit: contain;
+      display: block;
     }
-    .thumbnail-overlay {
+    .controls {
       position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
+      bottom: 0;
       width: 100%;
-      background-size: cover;
-      background-position: center;
+      background: rgba(0, 0, 0, 0.7);
       display: flex;
-      justify-content: center;
       align-items: center;
-      z-index: 20;
-      cursor: pointer;
-      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      transition: opacity 0.3s;
     }
-    .thumbnail-overlay .play-btn {
-      width: 90px;
-      height: 90px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .thumbnail-overlay .play-btn::after {
-      content: '';
-      border-style: solid;
-      border-width: 18px 0 18px 30px;
-      border-color: transparent transparent transparent white;
-      margin-left: 6px;
-    }
-    .gesture-zone { position: absolute; top: 0; height: 100%; width: 100%; z-index: 15; }
-    .zone-left, .zone-right, .zone-center { position: absolute; top: 0; height: 100%; }
-    .zone-left { width: 30%; left: 0; }
-    .zone-right { width: 30%; right: 0; }
-    .zone-center { width: 40%; left: 30%; }
-    .plyr--hide-controls .plyr__controls { opacity: 0 !important; pointer-events: none; transition: opacity 0.3s; }
-
-    /* Custom controls container for skip buttons */
-    .custom-controls {
-      position: absolute;
-      bottom: 70px;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      z-index: 16;
-    }
-    .custom-skip-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-      font-size: 16px;
-    }
-    .custom-skip-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-    .skip-feedback {
+    .hidden { opacity: 0; pointer-events: none; }
+    .play-btn {
       position: absolute;
       top: 50%;
-      font-size: 32px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 50px;
       color: white;
-      opacity: 0;
+      cursor: pointer;
       transition: opacity 0.3s;
-      transform: translateY(-50%);
     }
-    .feedback-left { left: 20%; }
-    .feedback-right { right: 20%; }
-    .show-feedback { opacity: 1 !important; }
+    .progress-bar {
+      flex: 1;
+      height: 5px;
+      background: gray;
+      cursor: pointer;
+      position: relative;
+      margin: 0 10px;
+    }
+    .progress {
+      height: 100%;
+      width: 0;
+      background: orange;
+    }
+    .time { color: white; font-size: 14px; margin: 0 10px; }
+    .tap-zone {
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      top: 0;
+    }
+    .left { left: 0; }
+    .right { right: 0; }
   </style>
 </head>
 <body>
-
-<video id="player" playsinline></video>
-<div class="thumbnail-overlay" id="thumbnail" style="background-image: url('{{thumbnail_url}}');">
-  <div class="play-btn"></div>
-</div>
-
-<!-- Skip feedback overlays -->
-<div class="skip-feedback feedback-left" id="feedbackLeft">-10s</div>
-<div class="skip-feedback feedback-right" id="feedbackRight">+10s</div>
-
-<!-- Custom controls for skip -->
-<div class="custom-controls">
-  <button class="custom-skip-btn" id="backwardBtn">-10s</button>
-  <button class="custom-skip-btn" id="forwardBtn">+10s</button>
-</div>
-
-<div class="gesture-zone">
-  <div class="zone-left"></div>
-  <div class="zone-center"></div>
-  <div class="zone-right"></div>
-</div>
-
-<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-<script>
-  const video = document.getElementById('player');
-  const videoSrc = '{{file_url}}';
-  const thumbnail = document.getElementById('thumbnail');
-  const feedbackLeft = document.getElementById('feedbackLeft');
-  const feedbackRight = document.getElementById('feedbackRight');
-
-  const player = new Plyr(video, {
-    controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
-    hideControls: false,
-  });
-
-  thumbnail.addEventListener('click', () => {
-    thumbnail.style.display = 'none';
-    video.src = videoSrc;
-    video.play();
-  });
-
-  function showFeedback(element) {
-    element.classList.add('show-feedback');
-    setTimeout(() => element.classList.remove('show-feedback'), 500);
-  }
-
-  document.getElementById('backwardBtn').addEventListener('click', () => {
-    video.currentTime = Math.max(video.currentTime - 10, 0);
-    showFeedback(feedbackLeft);
-  });
-  document.getElementById('forwardBtn').addEventListener('click', () => {
-    video.currentTime = Math.min(video.currentTime + 10, video.duration);
-    showFeedback(feedbackRight);
-  });
-
-  // Add total duration next to current time
-  player.on('ready', () => {
-    const currentTimeElement = player.elements.controls.querySelector('.plyr__time--current');
-    const durationElement = document.createElement('span');
-    durationElement.classList.add('plyr__time--duration');
-    durationElement.style.marginLeft = '6px';
-
-    const updateDuration = () => {
-      durationElement.textContent = `/ ${player.formatTime(video.duration)}`;
-    };
-    video.addEventListener('loadedmetadata', updateDuration);
-    video.addEventListener('durationchange', updateDuration);
-
-    currentTimeElement.parentNode.appendChild(durationElement);
-  });
-
-  // Gesture logic
-  let singleTapTimer = null;
-  function singleTapAction() {
-    player.elements.container.classList.toggle('plyr--hide-controls');
-  }
-  function doubleTapAction(action) {
-    if (action === 'left') {
-      video.currentTime = Math.max(video.currentTime - 10, 0);
-      showFeedback(feedbackLeft);
+  <div class="video-container">
+    <video id="video" src="{{file_url}}"></video>
+    <i class="fa fa-play play-btn" id="playBtn"></i>
+    <div class="tap-zone left" id="leftTap"></div>
+    <div class="tap-zone right" id="rightTap"></div>
+    <div class="controls hidden" id="controls">
+      <i class="fa fa-play" id="playPause"></i>
+      <span class="time" id="currentTime">0:00</span>
+      <div class="progress-bar" id="progressBar">
+        <div class="progress" id="progress"></div>
+      </div>
+      <span class="time" id="totalTime">0:00</span>
+      <i class="fa fa-expand" id="fullscreen"></i>
+    </div>
+  </div>
+  <script>
+    const video = document.getElementById('video');
+    const playBtn = document.getElementById('playBtn');
+    const playPause = document.getElementById('playPause');
+    const controls = document.getElementById('controls');
+    const progressBar = document.getElementById('progressBar');
+    const progress = document.getElementById('progress');
+    const currentTime = document.getElementById('currentTime');
+    const totalTime = document.getElementById('totalTime');
+    const leftTap = document.getElementById('leftTap');
+    const rightTap = document.getElementById('rightTap');
+    
+    let hideControlsTimeout;
+    function showControls() {
+      controls.classList.remove('hidden');
+      clearTimeout(hideControlsTimeout);
+      hideControlsTimeout = setTimeout(() => controls.classList.add('hidden'), 3000);
     }
-    if (action === 'right') {
-      video.currentTime = Math.min(video.currentTime + 10, video.duration);
-      showFeedback(feedbackRight);
+    function togglePlay() {
+      if (video.paused) { video.play(); playBtn.style.opacity = '0'; }
+      else { video.pause(); playBtn.style.opacity = '1'; }
+      updatePlayIcon();
     }
-    if (action === 'center') {
-      video.paused ? video.play() : video.pause();
+    function updatePlayIcon() {
+      playPause.classList.toggle('fa-play', video.paused);
+      playPause.classList.toggle('fa-pause', !video.paused);
     }
-  }
-
-  function setupDoubleTap(zone, action) {
-    let lastTap = 0;
-    zone.addEventListener('touchend', () => {
-      const now = Date.now();
-      if (now - lastTap < 300) {
-        clearTimeout(singleTapTimer);
-        doubleTapAction(action);
-      } else {
-        singleTapTimer = setTimeout(() => {
-          if (action === 'center') {
-            singleTapAction();
-          }
-        }, 300);
-      }
-      lastTap = now;
-    });
-  }
-
-  setupDoubleTap(document.querySelector('.zone-left'), 'left');
-  setupDoubleTap(document.querySelector('.zone-right'), 'right');
-  setupDoubleTap(document.querySelector('.zone-center'), 'center');
-</script>
-
+    function updateProgress() {
+      const percent = (video.currentTime / video.duration) * 100;
+      progress.style.width = `${percent}%`;
+      currentTime.textContent = formatTime(video.currentTime);
+    }
+    function setProgress(e) {
+      const newTime = (e.offsetX / progressBar.offsetWidth) * video.duration;
+      video.currentTime = newTime;
+    }
+    function formatTime(time) {
+      const minutes = Math.floor(time / 60);
+      const seconds = Math.floor(time % 60);
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+    function skip(seconds) {
+      video.currentTime += seconds;
+      showControls();
+    }
+    playBtn.addEventListener('click', togglePlay);
+    playPause.addEventListener('click', togglePlay);
+    video.addEventListener('timeupdate', updateProgress);
+    video.addEventListener('click', showControls);
+    video.addEventListener('loadedmetadata', () => { totalTime.textContent = formatTime(video.duration); });
+    progressBar.addEventListener('click', setProgress);
+    leftTap.addEventListener('dblclick', () => skip(-10));
+    rightTap.addEventListener('dblclick', () => skip(10));
+  </script>
 </body>
 </html>
