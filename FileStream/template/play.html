@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>File Streamer</title>
+  <title>File Streamer | {{file_name}}</title>
   <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
   <style>
     html, body {
@@ -12,172 +12,170 @@
       height: 100%;
       width: 100%;
       background: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      overflow: hidden;
       position: relative;
     }
     video {
-      max-width: 100%;
-      height: auto;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       background-color: black;
     }
-    @media (min-width: 768px) {
-      body {
-        display: block;
-      }
-      video {
-        width: 100vw;
-        height: 100vh;
-        object-fit: cover;
-      }
-    }
-    .tap-zone {
-      display: none;
-    }
-    @media (max-width: 767px) {
-      .tap-zone {
-        position: absolute;
-        top: 0;
-        height: 100%;
-        width: 40%;
-        z-index: 10;
-        display: block;
-      }
-      .tap-controls {
-        position: absolute;
-        top: 0;
-        height: 100%;
-        width: 20%;
-        left: 40%;
-        z-index: 10;
-        display: block;
-      }
-      .tap-left {
-        left: 0;
-      }
-      .tap-right {
-        right: 0;
-      }
-      .hide-taps .tap-left,
-      .hide-taps .tap-right {
-        display: none !important;
-      }
-    }
-    .custom-skip-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      color: white;
-      padding: 4px 10px;
-      border-radius: 4px;
+    .thumbnail-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color: black;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
       cursor: pointer;
-      margin: 0 5px;
-      transition: background 0.3s;
     }
-    .custom-skip-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
+    .thumbnail-overlay .play-btn {
+      width: 90px;
+      height: 90px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.3s;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+    .thumbnail-overlay .play-btn::after {
+      content: '';
+      border-style: solid;
+      border-width: 18px 0 18px 30px;
+      border-color: transparent transparent transparent white;
+      margin-left: 6px;
+    }
+    .gesture-zone {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 100%;
+      z-index: 15;
+    }
+    .zone-left, .zone-right, .zone-center {
+      position: absolute;
+      top: 0;
+      height: 100%;
+    }
+    .zone-left { width: 30%; left: 0; }
+    .zone-right { width: 30%; right: 0; }
+    .zone-center { width: 40%; left: 30%; }
+    .plyr__controls {
+      transition: opacity 0.3s ease;
+    }
+    .plyr--hide-controls .plyr__controls {
+      opacity: 0 !important;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
-<video id="player" controls playsinline></video>
-<div class="tap-zone tap-left"></div>
-<div class="tap-controls"></div>
-<div class="tap-zone tap-right"></div>
+<video id="player" playsinline></video>
+<div class="thumbnail-overlay" id="thumbnail" style="background-image: url('{{thumbnail_url}}');">
+  <div class="play-btn"></div>
+</div>
+
+<div class="gesture-zone">
+  <div class="zone-left"></div>
+  <div class="zone-center"></div>
+  <div class="zone-right"></div>
+</div>
 
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 <script>
   const video = document.getElementById('player');
-  const videoSrc = '{{file_url}}'; // Replace with your direct video URL
+  const videoSrc = '{{file_url}}';
+  const thumbnail = document.getElementById('thumbnail');
 
-  video.src = videoSrc;
   const player = new Plyr(video, {
     controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
-    hideControls: true,
+    hideControls: false,
   });
 
-  video.addEventListener('loadedmetadata', () => video.play());
+  thumbnail.addEventListener('click', () => {
+    thumbnail.style.display = 'none';
+    video.src = videoSrc;
+    video.play();
+  });
 
-  // Add custom skip buttons in controls after Plyr is ready
   player.on('ready', () => {
     const controls = player.elements.controls;
 
-    // Create -10 button
     const minusBtn = document.createElement('button');
-    minusBtn.innerText = '-10';
+    minusBtn.innerText = '-10s';
     minusBtn.classList.add('custom-skip-btn');
-    minusBtn.onclick = () => {
-      video.currentTime = Math.max(video.currentTime - 10, 0);
-    };
+    minusBtn.onclick = () => video.currentTime = Math.max(video.currentTime - 10, 0);
 
-    // Create +10 button
     const plusBtn = document.createElement('button');
-    plusBtn.innerText = '+10';
+    plusBtn.innerText = '+10s';
     plusBtn.classList.add('custom-skip-btn');
-    plusBtn.onclick = () => {
-      video.currentTime = Math.min(video.currentTime + 10, video.duration);
-    };
+    plusBtn.onclick = () => video.currentTime = Math.min(video.currentTime + 10, video.duration);
 
-    // Insert buttons after progress bar
     const progressBar = controls.querySelector('.plyr__progress');
     progressBar.parentNode.insertBefore(minusBtn, progressBar.nextSibling);
     progressBar.parentNode.insertBefore(plusBtn, minusBtn.nextSibling);
 
-    // Show total duration next to current time
     const currentTimeElement = controls.querySelector('.plyr__time--current');
     const durationElement = document.createElement('span');
     durationElement.classList.add('plyr__time--duration');
-    durationElement.style.marginLeft = '6px';
+
     const updateDuration = () => {
       durationElement.textContent = `/ ${player.formatTime(video.duration)}`;
     };
     video.addEventListener('loadedmetadata', updateDuration);
     video.addEventListener('durationchange', updateDuration);
+
     currentTimeElement.parentNode.appendChild(durationElement);
   });
 
-  const isMobile = window.matchMedia("(max-width: 767px)").matches;
+  // Gesture handling
+  let singleTapTimer = null;
 
-  if (isMobile) {
-    let lastTapLeft = 0;
-    let lastTapRight = 0;
+  function singleTapAction() {
+    if (player.elements.container.classList.contains('plyr--hide-controls')) {
+      player.elements.container.classList.remove('plyr--hide-controls');
+    } else {
+      player.elements.container.classList.add('plyr--hide-controls');
+    }
+  }
 
-    const tapLeft = document.querySelector('.tap-left');
-    const tapRight = document.querySelector('.tap-right');
-    const tapControls = document.querySelector('.tap-controls');
+  function doubleTapAction(action) {
+    if (action === 'left') video.currentTime = Math.max(video.currentTime - 10, 0);
+    if (action === 'right') video.currentTime = Math.min(video.currentTime + 10, video.duration);
+    if (action === 'center') video.paused ? video.play() : video.pause();
+  }
 
-    tapLeft.addEventListener('touchend', () => {
-      if (player.elements.container.classList.contains('plyr--hide-controls')) {
-        const currentTime = new Date().getTime();
-        if (currentTime - lastTapLeft < 300) {
-          video.currentTime = Math.max(video.currentTime - 10, 0);
-        }
-        lastTapLeft = currentTime;
-      }
-    });
-
-    tapRight.addEventListener('touchend', () => {
-      if (player.elements.container.classList.contains('plyr--hide-controls')) {
-        const currentTime = new Date().getTime();
-        if (currentTime - lastTapRight < 300) {
-          video.currentTime = Math.min(video.currentTime + 10, video.duration);
-        }
-        lastTapRight = currentTime;
-      }
-    });
-
-    // Toggle controls and tap zones
-    tapControls.addEventListener('touchend', () => {
-      player.elements.container.classList.toggle('plyr--hide-controls');
-      if (player.elements.container.classList.contains('plyr--hide-controls')) {
-        document.body.classList.remove('hide-taps');
+  function setupDoubleTap(zone, action) {
+    let lastTap = 0;
+    zone.addEventListener('touchend', (e) => {
+      const currentTime = new Date().getTime();
+      if (currentTime - lastTap < 300) {
+        clearTimeout(singleTapTimer);
+        doubleTapAction(action);
       } else {
-        document.body.classList.add('hide-taps');
+        singleTapTimer = setTimeout(() => {
+          if (action === 'center') {
+            singleTapAction();
+          }
+        }, 300);
       }
+      lastTap = currentTime;
     });
   }
-</script>
 
+  setupDoubleTap(document.querySelector('.zone-left'), 'left');
+  setupDoubleTap(document.querySelector('.zone-right'), 'right');
+  setupDoubleTap(document.querySelector('.zone-center'), 'center');
+</script>
 </body>
 </html>
