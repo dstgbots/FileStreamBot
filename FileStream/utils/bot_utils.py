@@ -92,7 +92,7 @@ async def gen_link(_id):
     embed_link = gen_final_embed_link(stream_link)
 
     if "video" in mime_type:
-        stream_text = LANG.STREAM_TEXT.format(file_name, file_size, stream_link, gen_final_embed_link, page_link, file_link)
+        stream_text = LANG.STREAM_TEXT.format(file_name, file_size, stream_link, embed_link, page_link, file_link)
         reply_markup = InlineKeyboardMarkup(
             [
                 [InlineKeyboardButton("sᴛʀᴇᴀᴍ", url=page_link), InlineKeyboardButton("ᴅᴏᴡɴʟᴏᴀᴅ", url=stream_link)],
