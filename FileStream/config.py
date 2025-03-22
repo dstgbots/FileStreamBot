@@ -25,6 +25,7 @@ class Telegram:
     MODE = env.get("MODE", "primary")
     SECONDARY = True if MODE.lower() == "secondary" else False
     AUTH_USERS = list(set(int(x) for x in str(env.get("AUTH_USERS", "")).split()))
+    EMBED_BASE_LINK = env.get("EMBED_BASE_LINK", "https://siwut.com/articles/go")
 
 class Server:
     PORT = int(env.get("PORT", 8080))

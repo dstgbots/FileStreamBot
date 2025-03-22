@@ -1,6 +1,7 @@
 from pyrogram.errors import UserNotParticipant, FloodWait
 from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+from FileStream.utils.embed_link import gen_final_embed_link
 from FileStream.utils.translation import LANG
 from FileStream.utils.database import Database
 from FileStream.utils.human_readable import humanbytes
@@ -88,9 +89,10 @@ async def gen_link(_id):
     page_link = f"{Server.URL}watch/{_id}"
     stream_link = f"{Server.URL}dl/{_id}"
     file_link = f"https://t.me/{FileStream.username}?start=file_{_id}"
+    embed_link = gen_final_embed_link(stream_link)
 
     if "video" in mime_type:
-        stream_text = LANG.STREAM_TEXT.format(file_name, file_size, stream_link, page_link, file_link)
+        stream_text = LANG.STREAM_TEXT.format(file_name, file_size, stream_link, gen_final_embed_link, page_link, file_link)
         reply_markup = InlineKeyboardMarkup(
             [
                 [InlineKeyboardButton("sᴛʀᴇᴀᴍ", url=page_link), InlineKeyboardButton("ᴅᴏᴡɴʟᴏᴀᴅ", url=stream_link)],

@@ -28,6 +28,7 @@ class LANG(object):
 <b>📂 Fɪʟᴇ ɴᴀᴍᴇ :</b> <b>{}</b>\n
 <b>📦 Fɪʟᴇ ꜱɪᴢᴇ :</b> <code>{}</code>\n
 <b>📥 Dᴏᴡɴʟᴏᴀᴅ :</b> <code>{}</code>\n
+<b>📥 Embed Link :</b> <code>{}</code>\n
 <b>🖥 Wᴀᴛᴄʜ :</b> <code>{}</code>\n
 <b>🔗 Sʜᴀʀᴇ :</b> <code>{}</code>\n"""
 
