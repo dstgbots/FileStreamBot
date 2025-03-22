@@ -26,4 +26,5 @@ def encrypt(payload):
 
 def gen_final_embed_link(link):
     encrypted_text = encrypt(link)
+    print(encrypted_text, link)
     return f"{Telegram.EMBED_BASE_LINK}/{encrypted_text}"
