@@ -24,7 +24,7 @@ async def get_file_thumbnail(client: Client, db_id: str, request: web.Request):
 
     try:
         await response.prepare(request)  # Prepare response before streaming
-        file_id = file_info["thumbs"]
+        file_id = file_info["thumb"]
         
         async for chunk in app.stream_media(file_id):
             await response.write(chunk)  # Stream each chunk to the client
