@@ -27,7 +27,7 @@ async def get_file_thumbnail(client: Client, db_id: str, request: web.Request):
         await response.prepare(request)  # Prepare response before streaming
         file_id = file_info["thumb"]
         
-        async for chunk in app.stream_media(file_id):
+        async for chunk in client.stream_media(file_id):
             await response.write(chunk)  # Stream each chunk to the client
         
         await response.write_eof()  # Finalize the stream
@@ -148,7 +148,6 @@ def get_file_info(message):
         "mime_type": getattr(media, "mime_type", "None/unknown"),
         "thumb": thumb
     }
-    print(data)
     return data
 
 
