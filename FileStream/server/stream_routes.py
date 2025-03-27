@@ -10,6 +10,7 @@ from FileStream.config import Telegram, Server
 from FileStream.server.exceptions import FIleNotFound, InvalidHash
 from FileStream import utils, StartTime, __version__
 from FileStream.utils.render_template import render_page
+from FileStream.utils.file_properties import get_file_thumbnail
 
 routes = web.RouteTableDef()
 
