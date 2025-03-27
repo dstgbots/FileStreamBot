@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from pyrogram import Client
 from typing import Any, Optional
+from aiohttp import web
 
 from pyrogram.enums import ParseMode, ChatType
 from pyrogram.types import Message
@@ -13,6 +14,24 @@ from FileStream.config import Telegram, Server
 
 db = Database(Telegram.DATABASE_URL, Telegram.SESSION_NAME)
 
+async def get_file_thumbnail(client: Client, db_id: str, request: web.Request):
+    file_info = await db.get_file(db_id)
+    response = web.StreamResponse(
+        status=200,
+        reason="OK",
+        headers={"Content-Type": "image/jpeg"}
+    )
+    await response.prepare(request)
+
+    try:
+        file_id = file_info["thumbs"]
+        async for chunk in app.stream_media(file_id):
+            await response.write(chunk)  # Stream each chunk to the client
+        
+        await response.write_eof()
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+    return response
 
 async def get_file_ids(client: Client | bool, db_id: str, multi_clients, message) -> Optional[FileId]:
     logging.debug("Starting of get_file_ids")
@@ -107,11 +126,13 @@ def get_file_info(message):
         user_idx = message.chat.id
     return {
         "user_id": user_idx,
+        "message_id": message.id,
         "file_id": getattr(media, "file_id", ""),
         "file_unique_id": getattr(media, "file_unique_id", ""),
         "file_name": get_name(message),
         "file_size": getattr(media, "file_size", 0),
-        "mime_type": getattr(media, "mime_type", "None/unknown")
+        "mime_type": getattr(media, "mime_type", "None/unknown"),
+        "thumb": getattr(media, "thumbs", [])
     }
 
 

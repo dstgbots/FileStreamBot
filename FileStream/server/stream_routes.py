@@ -43,6 +43,14 @@ async def stream_handler(request: web.Request):
     except (AttributeError, BadStatusLine, ConnectionResetError):
         pass
 
+@routes.get("/thumb/{path}")
+async def get_thumbnail(request: web.Request):
+    path = request.match_info["path"]
+    index = min(work_loads, key=work_loads.get)
+    faster_client = multi_clients[index]
+    await get_file_thumbnail(faster_client, path, request)
+    return
+
 
 @routes.get("/dl/{path}", allow_head=True)
 async def stream_handler(request: web.Request):
