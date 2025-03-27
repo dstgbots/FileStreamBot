@@ -21,17 +21,25 @@ async def get_file_thumbnail(client: Client, db_id: str, request: web.Request):
         reason="OK",
         headers={"Content-Type": "image/jpeg"}
     )
-    await response.prepare(request)
 
     try:
+        await response.prepare(request)  # Prepare response before streaming
         file_id = file_info["thumbs"]
+        
         async for chunk in app.stream_media(file_id):
             await response.write(chunk)  # Stream each chunk to the client
         
-        await response.write_eof()
+        await response.write_eof()  # Finalize the stream
+        return response  # Ensure response is returned after successful streaming
+
     except Exception as e:
-        return web.json_response({"error": str(e)}, status=500)
-    return response
+        # If an error occurs after response.prepare(), we cannot return a JSON response.
+        # Instead, we log and close the response properly.
+        if not response.started:
+            return web.json_response({"error": str(e)}, status=500)
+        else:
+            await response.write_eof()  # Close stream gracefully
+            return response  # Ensure response is returned, even in case of error
 
 async def get_file_ids(client: Client | bool, db_id: str, multi_clients, message) -> Optional[FileId]:
     logging.debug("Starting of get_file_ids")

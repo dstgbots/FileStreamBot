@@ -49,8 +49,7 @@ async def get_thumbnail(request: web.Request):
     path = request.match_info["path"]
     index = min(work_loads, key=work_loads.get)
     faster_client = multi_clients[index]
-    await get_file_thumbnail(faster_client, path, request)
-    return
+    return await get_file_thumbnail(faster_client, path, request)
 
 
 @routes.get("/dl/{path}", allow_head=True)
