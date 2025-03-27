@@ -16,6 +16,7 @@ db = Database(Telegram.DATABASE_URL, Telegram.SESSION_NAME)
 
 async def get_file_thumbnail(client: Client, db_id: str, request: web.Request):
     file_info = await db.get_file(db_id)
+    print(file_info)
     response = web.StreamResponse(
         status=200,
         reason="OK",
