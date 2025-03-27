@@ -138,7 +138,7 @@ def get_file_info(message):
     if thumb:
         thumb = thumb[0].file_id
 
-    return {
+    data = {
         "user_id": user_idx,
         "message_id": message.id,
         "file_id": getattr(media, "file_id", ""),
@@ -148,6 +148,8 @@ def get_file_info(message):
         "mime_type": getattr(media, "mime_type", "None/unknown"),
         "thumb": thumb
     }
+    print(data)
+    return data
 
 
 async def update_file_id(msg_id, multi_clients):
