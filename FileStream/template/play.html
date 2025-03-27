@@ -6,8 +6,7 @@
     <title>File Stream | {{file_name}}</title>
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <style>
-      html,
-      body {
+      html, body {
         margin: 0;
         padding: 0;
         height: 100%;
@@ -19,6 +18,9 @@
         width: 100vw;
         height: 100vh;
         object-fit: cover;
+      }
+      .fullscreen video {
+        object-fit: contain !important; /* Prevent cropping in fullscreen */
       }
       .center-play-button {
         position: absolute;
@@ -59,39 +61,16 @@
           'mute',
           'settings',
           'fullscreen',
-        ],
-        i18n: {
-          restart: 'Restart',
-          rewind: 'Rewind {seektime} seconds',
-          play: 'Play',
-          pause: 'Pause',
-          fastForward: 'Forward {seektime} seconds',
-          seek: 'Seek',
-          played: 'Played',
-          buffered: 'Buffered',
-          currentTime: 'Current time',
-          duration: 'Duration',
-          volume: 'Volume',
-          mute: 'Mute',
-          unmute: 'Unmute',
-          enableCaptions: 'Enable captions',
-          disableCaptions: 'Disable captions',
-          enterFullscreen: 'Enter fullscreen',
-          exitFullscreen: 'Exit fullscreen',
-          frameTitle: 'Player for {title}',
-          captions: 'Captions',
-          settings: 'Settings',
-          speed: 'Speed',
-          normal: 'Normal',
-          quality: 'Quality',
-          loop: 'Loop',
-          start: 'Start',
-          end: 'End',
-          all: 'All',
-          reset: 'Reset',
-          disabled: 'Disabled',
-          advertisement: 'Advertisement',
-        },
+        ]
+      });
+
+      // Detect fullscreen mode and change video fit
+      player.on('enterfullscreen', () => {
+        document.body.classList.add('fullscreen');
+      });
+
+      player.on('exitfullscreen', () => {
+        document.body.classList.remove('fullscreen');
       });
 
       const centerPlayBtn = document.getElementById('centerPlay');

@@ -41,7 +41,6 @@ async def get_file_thumbnail(client: Client, db_id: str, request: web.Request):
     except Exception as e:
         # If an error occurs after response.prepare(), we cannot return a JSON response.
         # Instead, we log and close the response properly.
-        print(f"Error: {e}")
         if not response.started:
             return web.json_response({"error": str(e)}, status=500)
         else:
