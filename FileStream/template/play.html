@@ -48,9 +48,6 @@
       <source src="{{file_url}}" type="video/mp4" />
     </video>
 
-    <!-- Center Play Button -->
-    <button id="centerPlay" class="center-play-button">❚❚</button>
-
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script>
       const player = new Plyr('#player', {
@@ -77,26 +74,11 @@
         document.body.classList.remove('fullscreen');
       });
 
-      // Center Play Button Logic
+      // Optional: Remove the center play button since the video autoplays
       const centerPlayBtn = document.getElementById('centerPlay');
-      centerPlayBtn.addEventListener('click', () => {
-        if (player.playing) {
-          player.pause(); // Pause the video
-          centerPlayBtn.textContent = '▶'; // Change to play icon
-        } else {
-          player.play(); // Play the video
-          centerPlayBtn.textContent = '❚❚'; // Change to pause icon
-        }
-      });
-
-      // Hide the center play button when the user interacts with the Plyr controls
-      player.on('play', () => {
+      if (centerPlayBtn) {
         centerPlayBtn.style.display = 'none';
-      });
-
-      player.on('pause', () => {
-        centerPlayBtn.style.display = 'flex';
-      });
+      }
     </script>
   </body>
 </html>
