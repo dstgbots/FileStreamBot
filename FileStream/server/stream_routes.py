@@ -47,7 +47,8 @@ async def stream_handler(request: web.Request):
 @routes.get("/thumb/{path}")
 async def get_thumbnail(request: web.Request):
     path = request.match_info["path"]
-    client = multi_clients[0]
+    index = multi_clients.keys()[0]
+    client = multi_clients[index]
     return await get_file_thumbnail(client, path, request)
 
 
