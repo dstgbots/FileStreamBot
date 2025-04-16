@@ -32,7 +32,7 @@ async def root_route_handler(_):
         }
     )
 
-@routes.get("/server1/watch/{path}", allow_head=True)
+@routes.get("watch/{path}", allow_head=True)
 async def stream_handler_server1(request: web.Request):
     try:
         path = request.match_info["path"]
