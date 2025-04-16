@@ -32,8 +32,8 @@ async def root_route_handler(_):
         }
     )
 
-@routes.get("/watch/{path}", allow_head=True)
-async def stream_handler(request: web.Request):
+@routes.get("/server1/watch/{path}", allow_head=True)
+async def stream_handler_server1(request: web.Request):
     try:
         path = request.match_info["path"]
         return web.Response(text=await render_page(path), content_type='text/html')
