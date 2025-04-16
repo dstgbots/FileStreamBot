@@ -32,8 +32,8 @@ async def root_route_handler(_):
         }
     )
 
-@routes.get("watch/{path}", allow_head=True)
-async def stream_handler_server1(request: web.Request):
+@routes.get("/watch/{path}", allow_head=True)
+async def stream_handler(request: web.Request):
     try:
         path = request.match_info["path"]
         return web.Response(text=await render_page(path), content_type='text/html')
@@ -43,6 +43,7 @@ async def stream_handler_server1(request: web.Request):
         raise web.HTTPNotFound(text=e.message)
     except (AttributeError, BadStatusLine, ConnectionResetError):
         pass
+        
 
 @routes.get("/thumb/{path}")
 async def get_thumbnail(request: web.Request):
