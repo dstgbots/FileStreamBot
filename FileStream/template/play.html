@@ -40,23 +40,45 @@
         align-items: center;
         justify-content: center;
       }
+      .autoplay-message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        text-align: center;
+        display: none;
+        z-index: 100;
+      }
+      .autoplay-button {
+        background: #f00;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-top: 10px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
-    <!-- Removed muted attribute so audio plays by default -->
+    <!-- Video element without muted but with autoplay -->
     <video id="player" playsinline controls poster="{{poster}}" autoplay>
       <source src="{{file_url}}" type="video/mp4" />
     </video>
 
+    <!-- Autoplay fallback message -->
+    <div id="autoplayMessage" class="autoplay-message">
+      <p>Click to play video with sound</p>
+      <button id="startPlayback" class="autoplay-button">Play Video</button>
+    </div>
+
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Get the native video element and explicitly unmute it
-        const videoElement = document.getElementById('player');
-        videoElement.muted = false;
-        videoElement.volume = 0.7; // Set to 70% volume
-      });
-
+      // Initialize Plyr player
       const player = new Plyr('#player', {
         controls: [
           'play-large',
@@ -72,15 +94,53 @@
         ]
       });
 
-      // Explicitly ensure audio is unmuted when player is ready
-      player.on('ready', () => {
-        player.muted = false;
-        player.volume = 0.7; // Set to 70% volume
+      // Get video element and autoplay message elements
+      const videoElement = document.getElementById('player');
+      const autoplayMessage = document.getElementById('autoplayMessage');
+      const startPlaybackButton = document.getElementById('startPlayback');
+      
+      // Function to attempt play with sound
+      const attemptPlayWithSound = () => {
+        videoElement.muted = false;
+        videoElement.volume = 0.7;
+        
+        const playPromise = videoElement.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            // Autoplay with sound succeeded
+            console.log('Autoplay with sound started successfully');
+            autoplayMessage.style.display = 'none';
+          }).catch(error => {
+            // Autoplay with sound was prevented
+            console.log('Autoplay with sound was prevented:', error);
+            
+            // Show the message to let the user initiate playback
+            autoplayMessage.style.display = 'block';
+          });
+        }
+      };
+      
+      // Try to play the video with sound as soon as it's loaded
+      videoElement.addEventListener('loadedmetadata', attemptPlayWithSound);
+      
+      // When the user clicks the play button, start playback with sound
+      startPlaybackButton.addEventListener('click', () => {
+        videoElement.muted = false;
+        videoElement.volume = 0.7;
+        videoElement.play()
+          .then(() => {
+            autoplayMessage.style.display = 'none';
+          })
+          .catch(error => {
+            console.log('Error starting playback:', error);
+          });
       });
 
-      // Also ensure it's unmuted if it starts playing
-      player.on('play', () => {
+      // Ensure unmuted on Plyr ready
+      player.on('ready', () => {
         player.muted = false;
+        player.volume = 0.7;
       });
 
       // Detect fullscreen mode and change video fit
@@ -92,7 +152,7 @@
         document.body.classList.remove('fullscreen');
       });
 
-      // Optional: Remove the center play button since the video autoplays
+      // Optional: Remove the center play button if it exists
       const centerPlayBtn = document.getElementById('centerPlay');
       if (centerPlayBtn) {
         centerPlayBtn.style.display = 'none';
