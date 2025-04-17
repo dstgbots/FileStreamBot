@@ -50,6 +50,13 @@
 
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Get the native video element and explicitly unmute it
+        const videoElement = document.getElementById('player');
+        videoElement.muted = false;
+        videoElement.volume = 0.7; // Set to 70% volume
+      });
+
       const player = new Plyr('#player', {
         controls: [
           'play-large',
@@ -63,6 +70,17 @@
           'settings',
           'fullscreen',
         ]
+      });
+
+      // Explicitly ensure audio is unmuted when player is ready
+      player.on('ready', () => {
+        player.muted = false;
+        player.volume = 0.7; // Set to 70% volume
+      });
+
+      // Also ensure it's unmuted if it starts playing
+      player.on('play', () => {
+        player.muted = false;
       });
 
       // Detect fullscreen mode and change video fit
