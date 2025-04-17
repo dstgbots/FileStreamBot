@@ -43,8 +43,8 @@
     </style>
   </head>
   <body>
-    <!-- Added autoplay and muted attributes -->
-    <video id="player" playsinline controls poster="{{poster}}" autoplay muted>
+    <!-- Removed muted attribute so audio plays by default -->
+    <video id="player" playsinline controls poster="{{poster}}" autoplay>
       <source src="{{file_url}}" type="video/mp4" />
     </video>
 
