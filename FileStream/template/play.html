@@ -40,49 +40,101 @@
         align-items: center;
         justify-content: center;
       }
+      /* Hide all plyr mute controls - we want to prevent users from seeing mute options */
+      .plyr__controls button[data-plyr="mute"] {
+        display: none !important;
+      }
     </style>
   </head>
   <body>
-    <video id="player" playsinline controls poster="{{poster}}" autoplay>
+    <video id="player" playsinline controls="false" poster="{{poster}}" autoplay>
       <source src="{{file_url}}" type="video/mp4" />
     </video>
 
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script>
-      // First, try to handle autoplay with audio
+      // Create a persistent audio context to enable audio
+      const enableAudio = () => {
+        // Create audio context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        
+        // Create an empty buffer
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+        
+        // Resume audio context if suspended
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      };
+      
+      // Force audio enablement
+      function forceUnmute() {
+        const video = document.getElementById('player');
+        video.muted = false;
+        video.volume = 1.0;
+        
+        // Try to enable audio context
+        enableAudio();
+        
+        // Try to play the video
+        video.play().catch(e => {
+          console.log('Play attempt failed:', e);
+          
+          // If play fails, try again in a moment
+          setTimeout(forceUnmute, 500);
+        });
+      }
+      
+      // Try to enable audio immediately
       document.addEventListener('DOMContentLoaded', function() {
+        // First, try to enable audio
+        enableAudio();
+        
         const video = document.getElementById('player');
         
-        // Function to try to play with sound
-        function playVideo() {
-          video.muted = false;
-          video.volume = 1.0;
-          video.play().catch(error => {
-            console.log('Autoplay with sound failed, trying muted autoplay:', error);
-            
-            // If it fails, try muted autoplay, then unmute after user interaction
-            video.muted = true;
-            video.play().then(() => {
-              // Add event listener to unmute on first interaction
-              document.addEventListener('click', function handleFirstClick() {
-                video.muted = false;
-                document.removeEventListener('click', handleFirstClick);
-              }, { once: true });
-            }).catch(e => {
-              console.log('Even muted autoplay failed:', e);
-            });
-          });
-        }
+        // Set up continuous attempts to unmute
+        let unmuteInterval = setInterval(function() {
+          if (video.muted) {
+            video.muted = false;
+            video.volume = 1.0;
+            console.log('Trying to unmute video');
+          } else {
+            // If we've successfully unmuted, can clear the interval
+            // but we'll keep it running to ensure it stays unmuted
+            console.log('Video is unmuted');
+          }
+        }, 1000);
         
-        // Start playback
-        playVideo();
+        // First attempt
+        forceUnmute();
         
-        // Also try to play on visibility change (user returns to tab)
+        // Try again after a delay
+        setTimeout(forceUnmute, 1000);
+        
+        // Try on any user interaction
+        const userEvents = ['click', 'touchstart', 'keydown', 'scroll'];
+        userEvents.forEach(event => {
+          document.addEventListener(event, function() {
+            forceUnmute();
+          }, { once: false });
+        });
+        
+        // Try when visibility changes
         document.addEventListener('visibilitychange', function() {
-          if (!document.hidden && video.paused) {
-            playVideo();
+          if (!document.hidden) {
+            forceUnmute();
           }
         });
+        
+        // Try on video events
+        video.addEventListener('play', forceUnmute);
+        video.addEventListener('playing', forceUnmute);
+        video.addEventListener('pause', forceUnmute);
       });
 
       // Initialize Plyr player
@@ -95,17 +147,44 @@
           'play',
           'fast-forward',
           'progress',
-          'mute',
           'settings',
           'fullscreen',
-        ]
+        ],
+        // Removed 'mute' from controls
+        muted: false,
+        volume: 1.0,
+        autoplay: true
       });
 
       // When Plyr is ready, ensure it reflects our unmuted state
       player.on('ready', () => {
         player.muted = false;
         player.volume = 1.0;
+        
+        // Override any muting attempts
+        const originalMutedSetter = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'muted').set;
+        Object.defineProperty(player.media, 'muted', {
+          set: function(v) {
+            // Always set to false regardless of requested value
+            originalMutedSetter.call(this, false);
+          }
+        });
       });
+      
+      // Continuously ensure player is not muted
+      setInterval(() => {
+        if (player && player.media) {
+          player.muted = false;
+          player.media.muted = false;
+        }
+      }, 1000);
+      
+      // Continuously try to play if paused
+      setInterval(() => {
+        if (player && player.media && player.media.paused) {
+          player.play();
+        }
+      }, 2000);
 
       // Detect fullscreen mode and change video fit
       player.on('enterfullscreen', () => {
