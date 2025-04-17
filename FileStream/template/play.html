@@ -40,44 +40,51 @@
         align-items: center;
         justify-content: center;
       }
-      .autoplay-message {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.7);
-        color: white;
-        padding: 15px 20px;
-        border-radius: 5px;
-        text-align: center;
-        display: none;
-        z-index: 100;
-      }
-      .autoplay-button {
-        background: #f00;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 4px;
-        margin-top: 10px;
-        cursor: pointer;
-      }
     </style>
   </head>
   <body>
-    <!-- Video element without muted but with autoplay -->
     <video id="player" playsinline controls poster="{{poster}}" autoplay>
       <source src="{{file_url}}" type="video/mp4" />
     </video>
 
-    <!-- Autoplay fallback message -->
-    <div id="autoplayMessage" class="autoplay-message">
-      <p>Click to play video with sound</p>
-      <button id="startPlayback" class="autoplay-button">Play Video</button>
-    </div>
-
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script>
+      // First, try to handle autoplay with audio
+      document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('player');
+        
+        // Function to try to play with sound
+        function playVideo() {
+          video.muted = false;
+          video.volume = 1.0;
+          video.play().catch(error => {
+            console.log('Autoplay with sound failed, trying muted autoplay:', error);
+            
+            // If it fails, try muted autoplay, then unmute after user interaction
+            video.muted = true;
+            video.play().then(() => {
+              // Add event listener to unmute on first interaction
+              document.addEventListener('click', function handleFirstClick() {
+                video.muted = false;
+                document.removeEventListener('click', handleFirstClick);
+              }, { once: true });
+            }).catch(e => {
+              console.log('Even muted autoplay failed:', e);
+            });
+          });
+        }
+        
+        // Start playback
+        playVideo();
+        
+        // Also try to play on visibility change (user returns to tab)
+        document.addEventListener('visibilitychange', function() {
+          if (!document.hidden && video.paused) {
+            playVideo();
+          }
+        });
+      });
+
       // Initialize Plyr player
       const player = new Plyr('#player', {
         controls: [
@@ -94,53 +101,10 @@
         ]
       });
 
-      // Get video element and autoplay message elements
-      const videoElement = document.getElementById('player');
-      const autoplayMessage = document.getElementById('autoplayMessage');
-      const startPlaybackButton = document.getElementById('startPlayback');
-      
-      // Function to attempt play with sound
-      const attemptPlayWithSound = () => {
-        videoElement.muted = false;
-        videoElement.volume = 0.7;
-        
-        const playPromise = videoElement.play();
-        
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            // Autoplay with sound succeeded
-            console.log('Autoplay with sound started successfully');
-            autoplayMessage.style.display = 'none';
-          }).catch(error => {
-            // Autoplay with sound was prevented
-            console.log('Autoplay with sound was prevented:', error);
-            
-            // Show the message to let the user initiate playback
-            autoplayMessage.style.display = 'block';
-          });
-        }
-      };
-      
-      // Try to play the video with sound as soon as it's loaded
-      videoElement.addEventListener('loadedmetadata', attemptPlayWithSound);
-      
-      // When the user clicks the play button, start playback with sound
-      startPlaybackButton.addEventListener('click', () => {
-        videoElement.muted = false;
-        videoElement.volume = 0.7;
-        videoElement.play()
-          .then(() => {
-            autoplayMessage.style.display = 'none';
-          })
-          .catch(error => {
-            console.log('Error starting playback:', error);
-          });
-      });
-
-      // Ensure unmuted on Plyr ready
+      // When Plyr is ready, ensure it reflects our unmuted state
       player.on('ready', () => {
         player.muted = false;
-        player.volume = 0.7;
+        player.volume = 1.0;
       });
 
       // Detect fullscreen mode and change video fit
@@ -151,12 +115,6 @@
       player.on('exitfullscreen', () => {
         document.body.classList.remove('fullscreen');
       });
-
-      // Optional: Remove the center play button if it exists
-      const centerPlayBtn = document.getElementById('centerPlay');
-      if (centerPlayBtn) {
-        centerPlayBtn.style.display = 'none';
-      }
     </script>
   </body>
 </html>
