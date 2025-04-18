@@ -3,11 +3,11 @@ import logging
 import time
 from typing import Dict, Union, List, Set, Optional
 from collections import defaultdict
-from FileStream.bot import work_loads
+from FileStream.bot import work_loads, multi_clients
 from pyrogram import Client, utils, raw
+from pyrogram.errors import FileReferenceExpired, FloodWait, AuthBytesInvalid
 from .file_properties import get_file_ids
 from pyrogram.session import Session, Auth
-from pyrogram.errors import AuthBytesInvalid, FloodWait
 from pyrogram.file_id import FileId, FileType, ThumbnailSource
 from pyrogram.types import Message
 
@@ -295,7 +295,7 @@ class ByteStreamer:
         Generator function to yield file chunks for streaming.
         """
         work_loads[index] += 1
-        client = self.client
+        client = multi_clients[index]
         media_session = None
         
         current_part = 0
@@ -319,7 +319,7 @@ class ByteStreamer:
                         timeout=20  # 20 second timeout
                     )
                     break
-                except pyrogram.errors.FileReferenceExpired:
+                except FileReferenceExpired:
                     logging.warning(f"File reference expired, attempting to refresh for attempt {attempt+1}")
                     if attempt < 2:  # Allow retries
                         # Try to refresh the file reference by fetching from the message again
@@ -383,7 +383,7 @@ class ByteStreamer:
                                 timeout=20
                             )
                             break
-                        except pyrogram.errors.FileReferenceExpired:
+                        except FileReferenceExpired:
                             logging.warning(f"File reference expired during stream, attempting to refresh for attempt {attempt+1}")
                             if attempt < 2:  # Allow retries
                                 # Try to refresh the file reference
@@ -414,7 +414,7 @@ class ByteStreamer:
             logging.error(f"Error streaming file: {str(e)}")
             if media_session:
                 await self.handle_socket_error(media_session, e)
-        except pyrogram.errors.FloodWait as e:
+        except FloodWait as e:
             logging.warning(f"FloodWait in yield_file: {e.x} seconds")
         except asyncio.CancelledError:
             logging.info("Stream was cancelled by client")
