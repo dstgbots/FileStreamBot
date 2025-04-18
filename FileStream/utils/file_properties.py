@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+import asyncio
 from datetime import datetime
 from pyrogram import Client
 from typing import Any, Optional
@@ -14,38 +15,67 @@ from FileStream.config import Telegram, Server
 
 db = Database(Telegram.DATABASE_URL, Telegram.SESSION_NAME)
 
+# Check if thumbnails are enabled in config
+ENABLE_THUMBNAILS = getattr(Telegram, 'ENABLE_THUMBNAILS', False)
+
 async def get_file_thumbnail(client: Client, db_id: str, request: web.Request):
-    file_info = await db.get_file(db_id)
-    response = web.StreamResponse(
-        status=200,
-        reason="OK",
-        headers={"Content-Type": "image/jpeg"}
-    )
-
+    # If thumbnails are disabled, return a placeholder response
+    if not ENABLE_THUMBNAILS:
+        return web.json_response({
+            "message": "Thumbnails are disabled on this server for performance reasons"
+        })
+    
     try:
-        if "thumb" not in file_info:
-            return web.json_response(
-                {
-                    "error": "Thumbnail Not found"
-                }
-            ) 
-        await response.prepare(request)  # Prepare response before streaming
-        file_id = file_info["thumb"]
+        file_info = await db.get_file(db_id)
         
-        async for chunk in client.stream_media(file_id):
-            await response.write(chunk)  # Stream each chunk to the client
+        # Check if thumbnail exists
+        if "thumb" not in file_info or not file_info["thumb"]:
+            return web.json_response({
+                "error": "Thumbnail Not found"
+            })
         
-        await response.write_eof()  # Finalize the stream
-        return response  # Ensure response is returned after successful streaming
+        # Create response
+        response = web.StreamResponse(
+            status=200,
+            reason="OK",
+            headers={
+                "Content-Type": "image/jpeg",
+                "Cache-Control": "public, max-age=31536000"  # Cache for 1 year
+            }
+        )
 
+        try:
+            await response.prepare(request)  # Prepare response before streaming
+            file_id = file_info["thumb"]
+            
+            # Use a timeout to prevent hanging connections
+            try:
+                async with asyncio.timeout(30):  # 30 seconds timeout
+                    async for chunk in client.stream_media(file_id):
+                        try:
+                            await response.write(chunk)  # Stream each chunk to the client
+                        except (ConnectionResetError, ConnectionError, asyncio.CancelledError) as e:
+                            # Handle connection errors gracefully
+                            logging.warning(f"Connection error while sending thumbnail: {str(e)}")
+                            break
+            except asyncio.TimeoutError:
+                logging.warning(f"Timeout while streaming thumbnail for {db_id}")
+            
+            await response.write_eof()  # Finalize the stream
+            return response
+        except Exception as e:
+            # If an error occurs after response.prepare(), we cannot return a JSON response
+            if not response.started:
+                return web.json_response({"error": str(e)}, status=500)
+            else:
+                try:
+                    await response.write_eof()  # Close stream gracefully
+                except:
+                    pass
+                return response
     except Exception as e:
-        # If an error occurs after response.prepare(), we cannot return a JSON response.
-        # Instead, we log and close the response properly.
-        if not response.started:
-            return web.json_response({"error": str(e)}, status=500)
-        else:
-            await response.write_eof()  # Close stream gracefully
-            return response  # Ensure response is returned, even in case of error
+        logging.error(f"Error serving thumbnail: {str(e)}")
+        return web.json_response({"error": "Failed to serve thumbnail"}, status=500)
 
 async def get_file_ids(client: Client | bool, db_id: str, multi_clients, message) -> Optional[FileId]:
     logging.debug("Starting of get_file_ids")
@@ -139,9 +169,13 @@ def get_file_info(message):
         user_idx = message.from_user.id
     else:
         user_idx = message.chat.id
-    thumb = getattr(media, "thumbs", None)
-    if thumb:
-        thumb = thumb[0].file_id
+    
+    # Only store thumbnail if enabled in config
+    thumb = None
+    if ENABLE_THUMBNAILS:
+        thumb_obj = getattr(media, "thumbs", None)
+        if thumb_obj:
+            thumb = thumb_obj[0].file_id
 
     data = {
         "user_id": user_idx,
@@ -181,5 +215,4 @@ async def send_file(client: Client, db_id, file_id: str, message):
             disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN, quote=True)
 
     return log_msg
-    # return await client.send_cached_media(Telegram.BIN_CHANNEL, file_id)
 
