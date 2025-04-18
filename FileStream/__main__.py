@@ -35,6 +35,7 @@ except ImportError:
 from FileStream.bot import FileStream
 from FileStream.server import web_server
 from FileStream.bot.clients import initialize_clients
+from FileStream.utils.cache import file_response_cache, file_info_cache
 
 # Get debug mode from environment
 DEBUG = getattr(Telegram, 'DEBUG', False)
@@ -119,6 +120,13 @@ async def start_services():
     )
     await site.start()
     print("------------------------------ DONE ------------------------------")
+    
+    # Start cache cleanup tasks
+    print("-------------------- Initializing Cache Cleanup -------------------")
+    file_response_cache.start_cleanup_task()
+    file_info_cache.start_cleanup_task()
+    print("------------------------------ DONE ------------------------------")
+    
     print()
     print("------------------------- Service Started -------------------------")
     print("                        bot =>> {}".format(bot_info.first_name))
