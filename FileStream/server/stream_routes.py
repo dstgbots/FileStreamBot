@@ -252,16 +252,19 @@ async def media_streamer(request: web.Request, db_id: str):
         
         # Use timeout to prevent hanging connections
         try:
-            async with asyncio.timeout(Server.REQUEST_TIMEOUT):
-                # Get file data
-                generator = tg_connect.yield_file(
-                    file_id, client_id, offset, first_part_cut, last_part_cut, part_count, chunk_size
-                )
-                
+            # Create generator for file streaming
+            generator = tg_connect.yield_file(
+                file_id, client_id, offset, first_part_cut, last_part_cut, part_count, chunk_size
+            )
+            
+            # Use asyncio.wait_for for compatibility with older Python versions
+            async def stream_with_timeout():
                 async for chunk in generator:
                     if not await response.write(chunk):
                         # If write returns False, the connection was closed
                         break
+            
+            await asyncio.wait_for(stream_with_timeout(), timeout=Server.REQUEST_TIMEOUT)
         except asyncio.TimeoutError:
             logging.warning(f"Timeout while streaming file {db_id}")
         
