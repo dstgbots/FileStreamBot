@@ -20,7 +20,16 @@ class LRUCache:
         self.ttl = ttl
         self.cache: OrderedDict = OrderedDict()
         self.expiry: Dict[str, float] = {}
-        asyncio.create_task(self._cleanup_task())
+        self._cleanup_task_running = False
+    
+    def start_cleanup_task(self):
+        """Start the cleanup task if it's not already running"""
+        if not self._cleanup_task_running:
+            try:
+                asyncio.create_task(self._cleanup_task())
+                self._cleanup_task_running = True
+            except RuntimeError:
+                logging.warning("Cannot start cache cleanup task: no running event loop")
     
     def __contains__(self, key: str) -> bool:
         """Check if key exists in cache and is not expired"""
