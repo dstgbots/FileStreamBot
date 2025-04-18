@@ -8,3 +8,7 @@ dnspython
 requests
 jinja2
 pycryptodome==3.22.0
+uvloop
+aiodns
+cchardet
+orjson
