@@ -292,11 +292,12 @@ class ByteStreamer:
         chunk_size: int,
     ) -> Union[str, None]:
         """
-        Custom generator that yields the bytes of the media file.
+        Generator function to yield file chunks for streaming.
         """
-        client = self.client
         work_loads[index] += 1
+        client = self.client
         media_session = None
+        
         current_part = 0
         
         logging.debug(f"Starting to yielding file with client {index}.")
@@ -318,6 +319,26 @@ class ByteStreamer:
                         timeout=20  # 20 second timeout
                     )
                     break
+                except pyrogram.errors.FileReferenceExpired:
+                    logging.warning(f"File reference expired, attempting to refresh for attempt {attempt+1}")
+                    if attempt < 2:  # Allow retries
+                        # Try to refresh the file reference by fetching from the message again
+                        try:
+                            # Extract the original message ID from the file_id metadata
+                            db_id = file_id.unique_id
+                            # Refresh the file properties
+                            refreshed_file_id = await self.generate_file_properties(db_id, multi_clients)
+                            # Update our file_id and location
+                            file_id = refreshed_file_id
+                            location = await self.get_location(file_id)
+                            logging.info(f"Successfully refreshed file reference for {db_id}")
+                            await asyncio.sleep(1)  # Short delay before retry
+                        except Exception as e:
+                            logging.error(f"Failed to refresh file reference: {str(e)}")
+                            if attempt == 2:  # Last attempt
+                                raise
+                    else:
+                        raise  # Re-raise on final attempt
                 except (TimeoutError, ConnectionError, OSError) as e:
                     if attempt < 2:  # Don't handle on the last attempt
                         logging.warning(f"Connection error on attempt {attempt+1}: {str(e)}")
@@ -362,6 +383,23 @@ class ByteStreamer:
                                 timeout=20
                             )
                             break
+                        except pyrogram.errors.FileReferenceExpired:
+                            logging.warning(f"File reference expired during stream, attempting to refresh for attempt {attempt+1}")
+                            if attempt < 2:  # Allow retries
+                                # Try to refresh the file reference
+                                try:
+                                    db_id = file_id.unique_id
+                                    refreshed_file_id = await self.generate_file_properties(db_id, multi_clients)
+                                    file_id = refreshed_file_id
+                                    location = await self.get_location(file_id)
+                                    logging.info(f"Successfully refreshed file reference during stream for {db_id}")
+                                    await asyncio.sleep(1)
+                                except Exception as e:
+                                    logging.error(f"Failed to refresh file reference during stream: {str(e)}")
+                                    if attempt == 2:
+                                        return
+                            else:
+                                return
                         except (TimeoutError, ConnectionError, OSError) as e:
                             if attempt < 2:  # Don't handle on the last attempt
                                 logging.warning(f"Connection error on attempt {attempt+1}: {str(e)}")
@@ -376,7 +414,7 @@ class ByteStreamer:
             logging.error(f"Error streaming file: {str(e)}")
             if media_session:
                 await self.handle_socket_error(media_session, e)
-        except FloodWait as e:
+        except pyrogram.errors.FloodWait as e:
             logging.warning(f"FloodWait in yield_file: {e.x} seconds")
         except asyncio.CancelledError:
             logging.info("Stream was cancelled by client")
